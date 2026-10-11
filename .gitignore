@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.vercel/
+.env
+.env.*
+!.env.example
+.mcp.json
+.DS_Store
+*.pem
+npm-debug.log*
