@@ -18,7 +18,8 @@ const SECTOR_SYMBOLS = [
   { symbol: "XLC", name: "Communication services" },
 ];
 
-const COUNTRIES = ["USA", "GBR", "DEU", "IND", "JPN", "BRA", "CHN", "FRA"];
+// World Bank API country paths and response IDs use ISO alpha-2 codes.
+const COUNTRIES = ["US", "GB", "DE", "IN", "JP", "BR", "CN", "FR"];
 
 async function getJson(url) {
   const response = await fetch(url, {
