@@ -1,15 +1,18 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
-import { UploadCloud, FileSpreadsheet, CheckCircle2, AlertCircle, Download, BarChart3 } from "lucide-react";
+import { UploadCloud, FileSpreadsheet, CheckCircle2, AlertCircle, Download, BarChart3, ExternalLink } from "lucide-react";
 import { downloadCsv } from "../lib/csv.js";
-import { marketSeries } from "../data/demoData.js";
+import { fetchPublicMarket } from "../lib/publicMarket.js";
 
 export default function CompanyData() {
   const [dataset, setDataset] = useState(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [benchmark, setBenchmark] = useState(null);
+
+  useEffect(() => { fetchPublicMarket().then(data => setBenchmark(data.indices?.find(item => item.symbol === "^GSPC") || null)).catch(() => setBenchmark(null)); }, []);
 
   async function handleFile(file) {
     setError(""); setDataset(null);
@@ -37,8 +40,8 @@ export default function CompanyData() {
 
   const numericColumns = useMemo(() => dataset?.columns.filter(c => dataset.rows.some(r => r[c] !== "" && Number.isFinite(Number(r[c])))) || [], [dataset]);
   return <div className="page-content">
-    <div className="page-heading"><div><div className="eyebrow">PRIVATE ANALYTICS WORKSPACE</div><h1>Company data</h1><p>Upload your business data and explore it alongside market benchmarks.</p></div></div>
-    <div className="security-note"><CheckCircle2 size={18}/><div><strong>Local preview mode</strong><p>Files are parsed in your browser in this starter. They are not uploaded to a database or saved to a server.</p></div></div>
+    <div className="page-heading"><div><div className="eyebrow">PRIVATE ANALYTICS WORKSPACE</div><h1>Company data</h1><p>Review a company file locally and keep market context beside its source and date.</p></div></div>
+    <div className="security-note"><CheckCircle2 size={18}/><div><strong>Private in-browser processing</strong><p>Files are read in this browser only. They are not uploaded to a database or saved to a server.</p></div></div>
     <label className={`upload-zone ${dragging ? "dragging" : ""}`} onDragOver={event => { event.preventDefault(); setDragging(true); }} onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget)) setDragging(false); }} onDrop={event => { event.preventDefault(); setDragging(false); handleFile(event.dataTransfer.files?.[0]); }}>
       <input type="file" accept=".csv,.xlsx,.xls" onChange={event => { handleFile(event.target.files?.[0]); event.target.value = ""; }} hidden/>
       <div className="upload-icon"><UploadCloud size={25}/></div><h3>{busy ? "Reading your file…" : "Upload a company dataset"}</h3>
@@ -49,11 +52,11 @@ export default function CompanyData() {
       <div className="panel-heading"><div><h3><FileSpreadsheet size={17} className="inline-icon"/> {dataset.name}</h3><p>{dataset.rows.length.toLocaleString()} rows · {dataset.columns.length} columns</p></div><button className="small-action" onClick={() => downloadCsv("trender-upload-preview.csv", dataset.rows)}><Download size={15}/> Export CSV</button></div>
       <div className="column-chips">{dataset.columns.map(c=><span key={c}>{c}{numericColumns.includes(c) && <b> #</b>}</span>)}</div>
       <div className="table-scroll"><table><thead><tr>{dataset.columns.slice(0,8).map(c=><th key={c}>{c}</th>)}</tr></thead><tbody>{dataset.rows.slice(0,8).map((row,i)=><tr key={i}>{dataset.columns.slice(0,8).map(c=><td key={c}>{String(row[c] ?? "")}</td>)}</tr>)}</tbody></table></div>
-      <p className="preview-note">Previewing first 8 rows. Numeric-looking columns: {numericColumns.join(", ") || "none detected"}.</p>
+      <p className="preview-note">Showing the first 8 rows. Numeric fields detected: {numericColumns.join(", ") || "none detected"}.</p>
     </div>}
-    <div className="section-title-row"><div><h2>Company vs. market</h2><p>Example comparison using illustrative market data.</p></div></div>
-    <div className="comparison-callout"><div className="comparison-icon"><BarChart3 size={22}/></div><div><strong>Comparison workspace</strong><p>{dataset ? "Your file is loaded for a local preview. Map its date, product, region, and performance columns before comparing it with a genuinely comparable market benchmark." : "Upload a dataset to start exploring the comparison workflow. Useful fields include date, product, country, units sold, and revenue."}</p></div></div>
-    <div className="mini-stats"><div><span>Sample market index</span><strong>{marketSeries.at(-1).global}</strong><small>Illustrative index</small></div><div><span>Sample company index</span><strong>{marketSeries.at(-1).company}</strong><small>Illustrative index</small></div><div><span>Gap</span><strong>{marketSeries.at(-1).company-marketSeries.at(-1).global}</strong><small>Index points · not revenue</small></div></div>
-    <p className="data-disclaimer">Security note: before using confidential data, implement authenticated uploads, server-side validation, organization-level permissions, private storage, and database access policies.</p>
+    <div className="section-title-row"><div><h2>Market benchmark context</h2><p>Current public reference point; file metrics are not compared until periods and units match.</p></div></div>
+    <div className="comparison-callout"><div className="comparison-icon"><BarChart3 size={22}/></div><div><strong>S&P 500 index</strong><p>{benchmark ? `Latest available quote: ${Number(benchmark.price).toLocaleString(undefined,{maximumFractionDigits:2})} points · ${benchmark.asOf ? new Date(benchmark.asOf).toLocaleString() : "timestamp unavailable"}.` : "The public benchmark is temporarily unavailable. Open Global Markets to refresh its sources."}{" "}<a href="https://finance.yahoo.com/quote/%5EGSPC/" target="_blank" rel="noreferrer">Yahoo Finance source <ExternalLink size={12}/></a></p></div></div>
+    <div className="mini-stats"><div><span>Uploaded records</span><strong>{dataset ? dataset.rows.length.toLocaleString() : "—"}</strong><small>{dataset ? "Local file" : "Upload a file to begin"}</small></div><div><span>Numeric fields</span><strong>{dataset ? numericColumns.length : "—"}</strong><small>{dataset ? numericColumns.join(", ") || "None detected" : "Detected from your file"}</small></div><div><span>S&P 500 benchmark</span><strong>{benchmark ? Number(benchmark.price).toLocaleString(undefined,{maximumFractionDigits:2}) : "—"}</strong><small>{benchmark?.asOf ? new Date(benchmark.asOf).toLocaleDateString() : "Latest public quote"}</small></div></div>
+    <p className="data-disclaimer">Company files stay in this browser and are not sent to Trender AI. Protect sensitive data on shared or public devices.</p>
   </div>;
 }

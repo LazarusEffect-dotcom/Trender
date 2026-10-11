@@ -7,6 +7,7 @@ const Overview = lazy(() => import("./pages/Overview.jsx"));
 const GenericPage = lazy(() => import("./pages/GenericPage.jsx"));
 const CompanyData = lazy(() => import("./pages/CompanyData.jsx"));
 const Assistant = lazy(() => import("./pages/Assistant.jsx"));
+const PublicWebSignals = lazy(() => import("./pages/PublicWebSignals.jsx"));
 
 const destinations = [
   { name: "Overview", detail: "Your market at a glance", terms: "home dashboard pulse" },
@@ -14,6 +15,7 @@ const destinations = [
   { name: "Consumer Trends", detail: "Category growth and demand signals", terms: "consumer products demand trends" },
   { name: "Industries", detail: "Industry momentum and comparisons", terms: "industry sector technology retail automotive" },
   { name: "Geographic Intelligence", detail: "Compare regions and opportunities", terms: "geography region country location" },
+  { name: "Public Web Signals", detail: "Explore open web activity and hosting platforms", terms: "public web signals hosting cms hubspot wix wordpress webflow" },
   { name: "Company Data", detail: "Explore your own data privately", terms: "upload csv excel company private" },
   { name: "AI Assistant", detail: "Ask Trender Intelligence", terms: "ai ask assistant copilot research" },
   { name: "Reports & Exports", detail: "Build and export reports", terms: "report csv download export" },
@@ -27,6 +29,21 @@ export default function App() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const searchInput = useRef(null);
+
+  useEffect(() => {
+    let settings = {};
+    try { settings = JSON.parse(window.localStorage.getItem("trender.settings.v1") || "{}"); } catch { settings = {}; }
+    const preference = window.matchMedia("(prefers-color-scheme: dark)");
+    const apply = () => {
+      const theme = settings.theme === "system" ? (preference.matches ? "dark" : "light") : settings.theme;
+      if (theme) document.documentElement.dataset.trenderTheme = theme;
+      if (settings.density) document.documentElement.dataset.trenderDensity = settings.density;
+    };
+    apply();
+    if (settings.theme !== "system") return undefined;
+    preference.addEventListener("change", apply);
+    return () => preference.removeEventListener("change", apply);
+  }, []);
 
   const matches = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -67,6 +84,7 @@ export default function App() {
         {active === "Overview" ? <Overview onNavigate={navigate}/> :
          active === "Company Data" ? <CompanyData/> :
          active === "AI Assistant" ? <Assistant/> :
+         active === "Public Web Signals" ? <PublicWebSignals/> :
          <GenericPage active={active}/>}
       </Suspense>
     </main>

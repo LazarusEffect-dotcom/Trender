@@ -1,30 +1,177 @@
-import React from "react";
-import { ArrowRight, Upload, Search, Bot, Globe2, Database, FileBarChart, Bookmark, Settings, Layers3, ShoppingBag } from "lucide-react";
-import { categoryData, regionData } from "../data/demoData.js";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import "../live.css";
+import { Activity, ArrowRight, BellRing, Check, Download, ExternalLink, Globe2, Plus, RefreshCw, Save, Trash2, TrendingUp } from "lucide-react";
+import { channelInsights, consumerInsights, numeratorSource } from "../data/consumerInsights.js";
 import { downloadCsv } from "../lib/csv.js";
+import { fetchPublicMarket } from "../lib/publicMarket.js";
 
-const configs = {
-  "Global Markets": { icon: Globe2, intro: "Monitor macroeconomic indicators, currencies, commodities, and global market movements.", cards: ["Macroeconomic indicators", "Currency & FX", "Commodities", "Supply chain signals"] },
-  "Consumer Trends": { icon: ShoppingBag, intro: "Discover rising product categories, consumer demand shifts, and changing purchase behavior.", cards: ["Emerging products", "Consumer demand", "Category growth", "Sentiment signals"] },
-  "Industries": { icon: Layers3, intro: "Compare industry momentum and identify sectors gaining or losing traction.", cards: ["Technology", "Retail & e-commerce", "Automotive", "Food & beverage"] },
-  "Geographic Intelligence": { icon: Globe2, intro: "Explore regional indicators and compare market opportunities across geographies.", cards: ["North America", "Europe", "South Asia", "East Asia"] },
-  "Reports & Exports": { icon: FileBarChart, intro: "Export the available demo datasets and create a starting point for market reports.", cards: ["Market performance", "Consumer categories", "Regional momentum", "Company comparison"] },
-  "Watchlists & Alerts": { icon: Bookmark, intro: "Track important indicators and configure the signals you want your team to monitor.", cards: ["Global momentum", "Consumer tech", "Electric mobility", "Currency volatility"] },
-  "Settings": { icon: Settings, intro: "Configure integrations, workspace preferences, and account settings.", cards: ["Data sources", "Workspace", "Security", "Notifications"] }
-};
+const WATCHLIST_KEY = "trender.watchlist.v1";
+const SETTINGS_KEY = "trender.settings.v1";
+const DEFAULT_SETTINGS = { theme: "light", density: "comfortable", refreshMinutes: "5" };
+const INDEX_SOURCE = "https://finance.yahoo.com/markets/";
+const WORLD_BANK_SOURCE = "https://data.worldbank.org/";
+
+function readStorage(key, fallback) {
+  try { const value = localStorage.getItem(key); return value ? JSON.parse(value) : fallback; }
+  catch { return fallback; }
+}
+
+function percent(value, digits = 2) {
+  if (value === null || value === undefined || !Number.isFinite(Number(value))) return "—";
+  return `${Number(value) > 0 ? "+" : ""}${Number(value).toFixed(digits)}%`;
+}
+
+function money(value, currency = "USD") {
+  if (value === null || value === undefined || !Number.isFinite(Number(value))) return "—";
+  try { return new Intl.NumberFormat(undefined, { style: "currency", currency, maximumFractionDigits: Number(value) < 10 ? 4 : 2 }).format(Number(value)); }
+  catch { return `${Number(value).toLocaleString()} ${currency}`; }
+}
+
+function instrumentValue(item, value = item?.price) {
+  if (item?.symbol?.startsWith("^")) return `${Number(value).toLocaleString(undefined, { maximumFractionDigits: 2 })} pts`;
+  return money(value, item?.currency || "USD");
+}
+
+function useWorkspaceData() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [updatedAt, setUpdatedAt] = useState("");
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const result = await fetchPublicMarket({ refresh: true });
+      setData(result);
+      setUpdatedAt(new Date().toISOString());
+    } catch (reason) { setError(reason?.message || "Public data is temporarily unavailable."); }
+    finally { setLoading(false); }
+  }, []);
+  useEffect(() => { let mounted = true; fetchPublicMarket().then(value => { if (mounted) { setData(value); setUpdatedAt(new Date().toISOString()); } }).catch(reason => { if (mounted) setError(reason?.message || "Public data is temporarily unavailable."); }).finally(() => { if (mounted) setLoading(false); }); return () => { mounted = false; }; }, []);
+  return { data, loading, error, updatedAt, refresh };
+}
+
+function PageHeader({ active, intro, onRefresh, loading, updatedAt }) {
+  return <div className="page-heading live-page-heading">
+    <div><div className="eyebrow"><span className="live-dot"/> PUBLIC DATA WORKSPACE</div><h1>{active}</h1><p>{intro}</p>
+      <small className="freshness-note">{updatedAt ? `Retrieved ${new Date(updatedAt).toLocaleString()}` : "Sources and reporting periods are shown with each dataset."}</small>
+    </div>
+    {onRefresh && <button className="primary-button" onClick={onRefresh} disabled={loading}><RefreshCw size={15} className={loading ? "spin-icon" : ""}/>{loading ? "Refreshing…" : "Refresh data"}</button>}
+  </div>;
+}
+
+function SourceLink({ href, children = "View source" }) {
+  return <a className="source-link" href={href} target="_blank" rel="noreferrer">{children}<ExternalLink size={13}/></a>;
+}
+
+function DataState({ loading, error, onRetry }) {
+  if (loading) return <div className="live-state" role="status">Loading the latest available public datasets…</div>;
+  if (error) return <div className="live-error" role="alert"><strong>Data source unavailable</strong><span>{error}</span><button className="small-action" onClick={onRetry}>Try again</button></div>;
+  return null;
+}
+
+function WatchButton({ item, watchlist, onToggle }) {
+  const saved = watchlist.some(entry => entry.symbol === item.symbol && !entry.condition);
+  return <button className={`watch-button ${saved ? "saved" : ""}`} onClick={() => onToggle(item)} aria-label={saved ? `Remove ${item.name} from watchlist` : `Add ${item.name} to watchlist`}>{saved ? <Check size={14}/> : <Plus size={14}/>} {saved ? "Watching" : "Watch"}</button>;
+}
 
 export default function GenericPage({ active }) {
-  const config = configs[active] || configs["Global Markets"];
-  const Icon = config.icon;
-  return <div className="page-content">
-    <div className="page-heading"><div><div className="eyebrow">TRENDER WORKSPACE</div><h1>{active}</h1><p>{config.intro}</p></div>
-      {active === "Reports & Exports" && <button className="primary-button" onClick={() => downloadCsv("trender-category-demo.csv", categoryData)}>Export sample CSV</button>}
-    </div>
-    <div className="feature-grid">{config.cards.map((label, i) => <div className="feature-card" key={label}><div className="feature-icon"><Icon size={19}/></div><div className="feature-card-title">{label}</div><p>{["Explore indicators and compare changes over time.","Review historical movement and available benchmarks.","Identify patterns and review the underlying data.","Save useful insights for future analysis."][i%4]}</p><div className="feature-footer"><span className="status-dot"/> Demo view <ArrowRight size={15}/></div></div>)}</div>
-    <section className="panel table-panel"><div className="panel-heading"><div><h3>Available sample indicators</h3><p>Illustrative values for interface testing only</p></div><button className="small-action" onClick={() => downloadCsv("trender-region-demo.csv", regionData)}>Export CSV</button></div>
-      <div className="table-scroll"><table><thead><tr><th>Region / category</th><th>Metric</th><th>Value</th><th>Status</th></tr></thead><tbody>
-        {regionData.map((r,i)=><tr key={r.region}><td>{r.region}</td><td>Momentum index</td><td>{r.momentum.toFixed(1)}%</td><td><span className={`table-status ${i===2?"status-green":"status-blue"}`}>{i===2?"Leading":"Tracking"}</span></td></tr>)}
-      </tbody></table></div>
-    </section>
+  const { data, loading, error, updatedAt, refresh } = useWorkspaceData();
+  const [watchlist, setWatchlist] = useState(() => { const stored = readStorage(WATCHLIST_KEY, []); return Array.isArray(stored) ? stored : []; });
+  const [settings, setSettings] = useState(() => ({ ...DEFAULT_SETTINGS, ...readStorage(SETTINGS_KEY, {}) }));
+  const [saved, setSaved] = useState(false);
+  const [alertForm, setAlertForm] = useState({ symbol: "^GSPC", condition: "above", threshold: "" });
+
+  useEffect(() => { localStorage.setItem(WATCHLIST_KEY, JSON.stringify(watchlist)); }, [watchlist]);
+  useEffect(() => {
+    const preference = window.matchMedia("(prefers-color-scheme: dark)");
+    const applyTheme = () => { document.documentElement.dataset.trenderTheme = settings.theme === "system" ? (preference.matches ? "dark" : "light") : settings.theme; document.documentElement.dataset.trenderDensity = settings.density; };
+    applyTheme();
+    if (settings.theme !== "system") return undefined;
+    preference.addEventListener("change", applyTheme);
+    return () => preference.removeEventListener("change", applyTheme);
+  }, [settings.theme, settings.density]);
+  useEffect(() => {
+    if (settings.refreshMinutes === "manual") return undefined;
+    const timer = window.setInterval(refresh, Number(settings.refreshMinutes) * 60_000);
+    return () => window.clearInterval(timer);
+  }, [settings.refreshMinutes, refresh]);
+
+  const instruments = useMemo(() => [
+    ...(data?.indices || []), ...(data?.sectors || []), ...(data?.crypto || []).map(item => ({ ...item, symbol: item.symbol || item.name })),
+  ], [data]);
+  const watchedPrice = (symbol) => instruments.find(item => item.symbol === symbol)?.price;
+  const toggleWatch = (item) => setWatchlist(current => current.some(entry => entry.symbol === item.symbol && !entry.condition) ? current.filter(entry => entry.symbol !== item.symbol || entry.condition) : [...current, { symbol: item.symbol, name: item.name, createdAt: new Date().toISOString() }]);
+  const addAlert = (event) => {
+    event.preventDefault();
+    const threshold = Number(alertForm.threshold);
+    const item = instruments.find(entry => entry.symbol === alertForm.symbol);
+    if (!item || !Number.isFinite(threshold) || threshold <= 0) return;
+    setWatchlist(current => [...current.filter(entry => entry.id !== `${item.symbol}:${alertForm.condition}:${threshold}`), { id: `${item.symbol}:${alertForm.condition}:${threshold}`, symbol: item.symbol, name: item.name, condition: alertForm.condition, threshold, createdAt: new Date().toISOString() }]);
+    setAlertForm(value => ({ ...value, threshold: "" }));
+  };
+
+  const intro = {
+    "Global Markets": "Cross-market quotes, currency reference rates, digital assets, and macro indicators from public providers.",
+    "Consumer Trends": "Published consumer spending and channel shifts, with the original reporting period and Numerator source attached.",
+    "Industries": "Track sector exchange-traded funds using recent market quotes and inspect their underlying provider.",
+    "Geographic Intelligence": "Compare each country’s latest reported GDP growth and inflation from the World Bank.",
+    "Reports & Exports": "Build downloadable reports from current public quotes, published consumer findings, and country indicators.",
+    "Watchlists & Alerts": "Save real market instruments and set thresholds that are checked against the latest fetched quotes.",
+    "Settings": "Set workspace display preferences, refresh public datasets, and inspect every active data provider.",
+  }[active] || "Explore public market information with source links and reporting dates.";
+
+  const renderMarkets = () => <>
+    <DataState loading={loading && !data} error={error && !data ? error : ""} onRetry={refresh}/>
+    {data && <>
+      <div className="live-toolbar"><span><span className="live-dot"/> {data.indices?.length || 0} global indices · delayed where noted</span><SourceLink href={INDEX_SOURCE}>Yahoo Finance market quotes</SourceLink></div>
+      <section className="live-card-grid">{(data.indices || []).map(item => <article className="live-card" key={item.symbol}><div className="live-card-top"><span>{item.region}</span><WatchButton item={item} watchlist={watchlist} onToggle={toggleWatch}/></div><h3>{item.name}</h3><strong className="live-value">{instrumentValue(item)}</strong><span className={Number(item.changePercent) >= 0 ? "positive-change" : "negative-change"}>{percent(item.changePercent)}</span><small>Quote time {item.asOf ? new Date(item.asOf).toLocaleString() : "unavailable"}</small></article>)}</section>
+      <div className="live-two-column">
+        <section className="panel live-panel"><div className="panel-heading"><div><h3>Currency reference rates</h3><p>Currency units per US dollar · {data.currencies?.[0]?.date || "latest available"}</p></div><SourceLink href="https://www.frankfurter.app/">ECB via Frankfurter</SourceLink></div><div className="table-scroll"><table><thead><tr><th>Pair</th><th>Reference rate</th><th>Published</th></tr></thead><tbody>{(data.currencies || []).map(row => <tr key={row.currency}><td>USD / {row.currency}</td><td>{Number(row.rate).toLocaleString(undefined,{maximumFractionDigits:4})}</td><td>{row.date}</td></tr>)}</tbody></table></div></section>
+        <section className="panel live-panel"><div className="panel-heading"><div><h3>Digital assets</h3><p>Binance 24-hour spot ticker · quoted in USDT</p></div><SourceLink href="https://developers.binance.com/en/docs/products/spot/rest-api/market-data-endpoints">Binance market data</SourceLink></div><div className="table-scroll"><table><thead><tr><th>Asset</th><th>Price</th><th>24h move</th><th/></tr></thead><tbody>{(data.crypto || []).map(row => <tr key={row.symbol}><td><strong>{row.name}</strong><small>{row.symbol} / USDT</small></td><td>{money(row.price,row.currency)}</td><td className={Number(row.changePercent)>=0?"positive-change":"negative-change"}>{percent(row.changePercent)}</td><td><WatchButton item={row} watchlist={watchlist} onToggle={toggleWatch}/></td></tr>)}</tbody></table></div></section>
+      </div>
+      <section className="panel live-panel"><div className="panel-heading"><div><h3>Macro indicators by country</h3><p>Latest available annual observations; years may differ</p></div><SourceLink href={WORLD_BANK_SOURCE}>World Bank Open Data</SourceLink></div><div className="table-scroll"><table><thead><tr><th>Economy</th><th>GDP growth</th><th>GDP year</th><th>Inflation</th><th>Inflation year</th></tr></thead><tbody>{(data.economies || []).map(row => <tr key={row.code}><td>{row.country}</td><td className={Number(row.gdpGrowth)>=0?"positive-change":"negative-change"}>{percent(row.gdpGrowth)}</td><td>{row.gdpYear || "—"}</td><td>{percent(row.inflation)}</td><td>{row.inflationYear || "—"}</td></tr>)}</tbody></table></div></section>
+    </>}
+  </>;
+
+  const renderConsumers = () => <>
+    <section className="report-source-banner"><div><strong>{numeratorSource.name}</strong><span>{numeratorSource.period}</span></div><SourceLink href={numeratorSource.url}>Open Numerator report</SourceLink></section>
+    <div className="live-card-grid consumer-card-grid">{consumerInsights.map(item => <article className="live-card consumer-stat" key={item.label}><div className="eyebrow">US CONSUMER SPENDING · {item.period}</div><strong className="live-value">{item.value}</strong><h3>{item.label}</h3><p>{item.detail}</p></article>)}</div>
+    <section className="panel live-panel"><div className="panel-heading"><div><h3>Retail channel shifts</h3><p>Reported share changes by generation; use source definitions for context.</p></div><SourceLink href={numeratorSource.url}>Method and context</SourceLink></div><div className="live-card-grid channel-grid">{channelInsights.map(item => <article className="channel-stat" key={item.label}><strong>{item.value}</strong><span>{item.label}</span></article>)}</div><p className="report-footnote">These are published 2025 findings, not real-time tracking. Numerator’s underlying purchase panel is proprietary; only findings published on the public report page are included here.</p></section>
+  </>;
+
+  const renderIndustries = () => <>
+    <DataState loading={loading && !data} error={error && !data ? error : ""} onRetry={refresh}/>
+    {data && <section className="panel live-panel"><div className="panel-heading"><div><h3>US sector ETF quotes</h3><p>Exchange-traded funds used as sector proxies · quote timestamps below</p></div><SourceLink href={INDEX_SOURCE}>Yahoo Finance</SourceLink></div><div className="table-scroll"><table><thead><tr><th>Sector</th><th>Proxy</th><th>Last price</th><th>Daily move</th><th>Quote time</th><th/></tr></thead><tbody>{(data.sectors || []).map(row => <tr key={row.symbol}><td>{row.name}</td><td>{row.symbol}</td><td>{money(row.price, row.currency)}</td><td className={Number(row.changePercent)>=0?"positive-change":"negative-change"}>{percent(row.changePercent)}</td><td>{row.asOf ? new Date(row.asOf).toLocaleString() : "—"}</td><td><WatchButton item={row} watchlist={watchlist} onToggle={toggleWatch}/></td></tr>)}</tbody></table></div><p className="report-footnote">Sector ETFs are market proxies and do not represent a complete industry census or company fundamentals.</p></section>}
+  </>;
+
+  const renderGeography = () => <>
+    <DataState loading={loading && !data} error={error && !data ? error : ""} onRetry={refresh}/>
+    {data && <section className="panel live-panel"><div className="panel-heading"><div><h3>Country comparison</h3><p>Annual GDP growth and consumer price inflation · reporting year shown per series</p></div><SourceLink href={WORLD_BANK_SOURCE}>World Bank data catalog</SourceLink></div><div className="table-scroll"><table><thead><tr><th>Country</th><th>GDP growth</th><th>Reporting year</th><th>Inflation</th><th>Reporting year</th></tr></thead><tbody>{(data.economies || []).map(row => <tr key={row.code}><td><strong>{row.country}</strong><small>{row.code}</small></td><td className={Number(row.gdpGrowth)>=0?"positive-change":"negative-change"}>{percent(row.gdpGrowth)}</td><td>{row.gdpYear || "—"}</td><td>{percent(row.inflation)}</td><td>{row.inflationYear || "—"}</td></tr>)}</tbody></table></div><p className="report-footnote">Values are the most recent observations returned by the World Bank API. They may refer to different years and are not forecasts.</p></section>}
+  </>;
+
+  const renderReports = () => {
+    const exportRows = [
+      ...(data?.indices || []).map(row => ({ dataset: "Global index", name: row.name, symbol: row.symbol, value: row.price, unit: row.unit, changePercent: row.changePercent, asOf: row.asOf, source: row.source })),
+      ...(data?.economies || []).map(row => ({ dataset: "World Bank economy", name: row.country, code: row.code, gdpGrowth: row.gdpGrowth, gdpYear: row.gdpYear, inflation: row.inflation, inflationYear: row.inflationYear, source: "World Bank Open Data" })),
+      ...consumerInsights.map(row => ({ dataset: "Numerator consumer spending", name: row.label, value: row.value, period: row.period, detail: row.detail, source: numeratorSource.url })),
+    ];
+    return <><DataState loading={loading && !data} error={error && !data ? error : ""} onRetry={refresh}/><section className="report-export-grid"><article className="panel export-panel"><div className="feature-icon"><Globe2 size={19}/></div><h3>Global markets snapshot</h3><p>Export available index quotes with provider time and currency.</p><button className="primary-button" disabled={!data?.indices?.length} onClick={() => downloadCsv("trender-global-markets.csv", data.indices)}> <Download size={15}/> Download CSV</button></article><article className="panel export-panel"><div className="feature-icon"><Activity size={19}/></div><h3>Country indicators</h3><p>Export World Bank observations with the reporting year for each indicator.</p><button className="primary-button" disabled={!data?.economies?.length} onClick={() => downloadCsv("trender-country-indicators.csv", data.economies)}> <Download size={15}/> Download CSV</button></article><article className="panel export-panel"><div className="feature-icon"><TrendingUp size={19}/></div><h3>Research sourcebook</h3><p>Combine the current public snapshot with published Numerator findings.</p><button className="primary-button" disabled={!exportRows.length} onClick={() => downloadCsv("trender-public-research.csv", exportRows)}> <Download size={15}/> Download sourcebook</button></article></section></>;
+  };
+
+  const renderWatchlist = () => {
+    const alertSymbol = alertForm.symbol;
+    const choices = instruments.filter(row => row.symbol);
+    return <><DataState loading={loading && !data} error={error && !data ? error : ""} onRetry={refresh}/><div className="watch-layout"><section className="panel live-panel"><div className="panel-heading"><div><h3>Tracked instruments</h3><p>Saved on this device. Current quotes are refreshed from public feeds.</p></div><button className="small-action" onClick={() => downloadCsv("trender-watchlist.csv", watchlist)}>Export watchlist</button></div>{watchlist.length ? <div className="watchlist-rows">{watchlist.map((item,index) => { const asset=instruments.find(row=>row.symbol===item.symbol)||item; const price=watchedPrice(item.symbol); const hit=item.condition && Number.isFinite(price) && (item.condition === "above" ? price >= item.threshold : price <= item.threshold); return <article className="watchlist-row" key={item.id || `${item.symbol}-${index}`}><div><strong>{item.name}</strong><small>{item.symbol} · {price === undefined ? "waiting for a quote" : instrumentValue(asset,price)}</small></div><div className="watchlist-actions">{item.condition ? <span className={`alert-status ${hit ? "triggered" : ""}`}><BellRing size={13}/>{hit ? "Threshold reached" : `${item.condition} ${instrumentValue(asset,item.threshold)}`}</span> : <span className="saved-label">On watchlist</span>}<button className="icon-button danger-button" onClick={() => setWatchlist(current => current.filter(row => row !== item))} aria-label={`Remove ${item.name}`}><Trash2 size={16}/></button></div></article>; })}</div> : <div className="empty-watchlist"><BellRing size={22}/><strong>Your watchlist is ready</strong><span>Add an instrument from Global Markets or create a price threshold.</span></div>}</section><section className="panel live-panel alert-form-panel"><div className="panel-heading"><div><h3>Create a price alert</h3><p>Thresholds are evaluated when data refreshes in this workspace.</p></div></div><form onSubmit={addAlert} className="settings-form"><label>Instrument<select value={alertSymbol} onChange={event => setAlertForm(value=>({...value,symbol:event.target.value}))}>{choices.map(item=><option key={item.symbol} value={item.symbol}>{item.name} ({item.symbol})</option>)}</select></label><label>Condition<select value={alertForm.condition} onChange={event=>setAlertForm(value=>({...value,condition:event.target.value}))}><option value="above">Price rises to or above</option><option value="below">Price falls to or below</option></select></label><label>Threshold<input type="number" min="0.0001" step="any" required value={alertForm.threshold} onChange={event=>setAlertForm(value=>({...value,threshold:event.target.value}))} placeholder="Enter a price level"/></label><button className="primary-button" type="submit" disabled={!choices.length}><Plus size={15}/> Save alert</button></form><small className="report-footnote">Alerts are stored locally and checked when you refresh. They do not send email or push notifications.</small></section></div></>;
+  };
+
+  const renderSettings = () => {
+    const providers = [...(data?.sources || [{name:"Yahoo Finance",url:INDEX_SOURCE,note:"Public market quote feed; may be delayed."},{name:"Frankfurter / European Central Bank",url:"https://www.frankfurter.app/",note:"Published daily reference exchange rates."},{name:"Binance public spot market data",url:"https://developers.binance.com/en/docs/products/spot/rest-api/market-data-endpoints",note:"24-hour crypto spot tickers quoted in USDT."},{name:"World Bank Open Data",url:WORLD_BANK_SOURCE,note:"Annual macroeconomic statistics; reporting years vary."}]), {name:numeratorSource.name,url:numeratorSource.url,note:numeratorSource.period}];
+    return <><section className="panel live-panel settings-panel"><div className="panel-heading"><div><h3>Workspace preferences</h3><p>Settings are saved in this browser and applied immediately.</p></div>{saved && <span className="saved-label"><Check size={14}/> Saved</span>}</div><div className="settings-form preferences-grid"><label>Appearance<select value={settings.theme} onChange={event=>{setSettings(value=>({...value,theme:event.target.value}));setSaved(false);}}><option value="light">Light</option><option value="dark">Dark</option><option value="system">System default</option></select></label><label>Data density<select value={settings.density} onChange={event=>{setSettings(value=>({...value,density:event.target.value}));setSaved(false);}}><option value="comfortable">Comfortable</option><option value="compact">Compact tables</option></select></label><label>Automatic data refresh<select value={settings.refreshMinutes} onChange={event=>{setSettings(value=>({...value,refreshMinutes:event.target.value}));setSaved(false);}}><option value="1">Every minute</option><option value="5">Every 5 minutes</option><option value="15">Every 15 minutes</option><option value="manual">Manual only</option></select></label><div className="settings-submit"><button className="primary-button" onClick={()=>{localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));setSaved(true);}}><Save size={15}/> Save preferences</button><button className="small-action" onClick={refresh} disabled={loading}><RefreshCw size={14}/> Refresh providers</button></div></div></section><section className="panel live-panel"><div className="panel-heading"><div><h3>Connected public sources</h3><p>Each dataset includes its provider and freshness limits.</p></div></div><div className="provider-list">{providers.map(source=><article className="provider-row" key={source.name}><div><strong>{source.name}</strong><span>{source.note}</span></div><SourceLink href={source.url}>Provider details</SourceLink></article>)}</div></section><section className="panel live-panel"><div className="panel-heading"><div><h3>AI connection</h3><p>Trender Intelligence uses your server-side OpenRouter configuration. The key is never stored in this browser.</p></div></div><div className="settings-inline-actions"><a className="small-action" href="https://openrouter.ai/settings/keys" target="_blank" rel="noreferrer">OpenRouter key settings <ExternalLink size={13}/></a><span className="report-footnote">Only free model routes are configured by default. Set OPENROUTER_API_KEY in Vercel and redeploy.</span></div></section></>;
+  };
+
+  return <div className={`page-content live-page ${settings.density === "compact" ? "compact-density" : ""}`}>
+    <PageHeader active={active} intro={intro} onRefresh={active === "Consumer Trends" ? undefined : refresh} loading={loading} updatedAt={active === "Consumer Trends" ? "" : updatedAt}/>
+    {active === "Global Markets" ? renderMarkets() : active === "Consumer Trends" ? renderConsumers() : active === "Industries" ? renderIndustries() : active === "Geographic Intelligence" ? renderGeography() : active === "Reports & Exports" ? renderReports() : active === "Watchlists & Alerts" ? renderWatchlist() : active === "Settings" ? renderSettings() : renderMarkets()}
   </div>;
 }

@@ -1,51 +1,77 @@
-import React, { useState } from "react";
-import { Activity, Globe2, TrendingUp, ShieldAlert, ArrowUpRight, ArrowRight } from "lucide-react";
-import { AreaChart, Area, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import React, { useEffect, useState } from "react";
+import "../live.css";
+import { Activity, ArrowRight, ArrowUpRight, ExternalLink, Globe2, RefreshCw, TrendingUp, WalletCards } from "lucide-react";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import MetricCard from "../components/MetricCard.jsx";
 import ChartCard from "../components/ChartCard.jsx";
-import { marketSeries, categoryData, regionData, newsItems } from "../data/demoData.js";
+import { consumerInsights, numeratorSource } from "../data/consumerInsights.js";
+import { fetchPublicMarket } from "../lib/publicMarket.js";
+
+function currency(value, code = "USD") {
+  if (value === null || value === undefined || !Number.isFinite(Number(value))) return "—";
+  try { return new Intl.NumberFormat(undefined, { style: "currency", currency: code, notation: "compact", maximumFractionDigits: 2 }).format(Number(value)); }
+  catch { return `${Number(value).toLocaleString(undefined, { maximumFractionDigits: 2 })} ${code}`; }
+}
+
+function indexPoints(value) {
+  return value === null || value === undefined || !Number.isFinite(Number(value)) ? "—" : Number(value).toLocaleString(undefined, { maximumFractionDigits: 2 });
+}
+
+function move(value) {
+  return Number.isFinite(Number(value)) ? `${Number(value) > 0 ? "+" : ""}${Number(value).toFixed(2)}%` : "Latest public quote";
+}
 
 export default function Overview({ onNavigate }) {
-  const [period, setPeriod] = useState("all");
-  const visibleSeries = period === "recent" ? marketSeries.slice(-3) : marketSeries;
+  const [market, setMarket] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [refreshedAt, setRefreshedAt] = useState("");
+  const refresh = async () => {
+    setLoading(true); setError("");
+    try { const value = await fetchPublicMarket({ refresh: true }); setMarket(value); setRefreshedAt(new Date().toISOString()); }
+    catch (reason) { setError(reason?.message || "Public market feeds are temporarily unavailable."); }
+    finally { setLoading(false); }
+  };
+  useEffect(() => { let mounted=true; fetchPublicMarket().then(value=>{if(mounted){setMarket(value);setRefreshedAt(new Date().toISOString());}}).catch(reason=>{if(mounted)setError(reason?.message||"Public market feeds are temporarily unavailable.");}).finally(()=>{if(mounted)setLoading(false);}); return ()=>{mounted=false;}; }, []);
+  const sp500 = market?.indices?.find(item => item.symbol === "^GSPC");
+  const nasdaq = market?.indices?.find(item => item.symbol === "^IXIC");
+  const bitcoin = market?.crypto?.find(item => item.symbol === "BTC");
+  const euro = market?.currencies?.find(item => item.currency === "EUR");
+  const chartRows = (sp500?.history || []).map(row => ({ ...row, symbol: "^GSPC", unit: "index points", source: sp500?.source || "Yahoo Finance public chart feed" }));
+  const cards = [
+    { label: "S&P 500", value: indexPoints(sp500?.price), change: move(sp500?.changePercent), note: "Index points · latest quote", icon: Globe2 },
+    { label: "Nasdaq Composite", value: indexPoints(nasdaq?.price), change: move(nasdaq?.changePercent), note: "Index points · latest quote", icon: Activity },
+    { label: "Bitcoin", value: currency(bitcoin?.price, bitcoin?.currency || "USD"), change: move(bitcoin?.changePercent), note: "Binance spot · USDT quote", icon: WalletCards },
+    { label: "USD / EUR", value: euro?.rate ? Number(euro.rate).toFixed(4) : "—", change: euro?.date || "ECB reference rate", note: "Units per US dollar", icon: TrendingUp },
+  ];
   return <div className="page-content">
     <div className="page-heading">
-      <div><div className="eyebrow"><span className="live-dot"/> MARKET PULSE <span className="demo-label">DEMO DATA</span></div>
-        <h1>See where momentum is shifting.</h1><p>A clear view of category, regional, and demand signals.</p></div>
-      <div className="heading-actions"><select value={period} onChange={event => setPeriod(event.target.value)} aria-label="Market chart range"><option value="recent">Last 3 sample months</option><option value="all">All 6 sample months</option></select><button className="primary-button" onClick={() => onNavigate("Reports & Exports")}>Create report <ArrowUpRight size={16}/></button></div>
+      <div><div className="eyebrow"><span className="live-dot"/> GLOBAL MARKET PULSE</div>
+        <h1>Markets, with the sources attached.</h1><p>Public quotes, exchange rates, and published consumer research in one view.</p><small className="freshness-note">{refreshedAt ? `Snapshot retrieved ${new Date(refreshedAt).toLocaleString()}` : "Use each source link to review its timing and methodology."}</small></div>
+      <div className="heading-actions"><button className="small-action" onClick={refresh} disabled={loading}><RefreshCw size={14} className={loading?"spin-icon":""}/>{loading?"Refreshing…":"Refresh"}</button><button className="primary-button" onClick={() => onNavigate("Reports & Exports")}>Build report <ArrowUpRight size={16}/></button></div>
     </div>
-    <div className="metric-grid">
-      <MetricCard label="Global market momentum" value="72.8" change="+4.2%" note="vs. previous sample" icon={Globe2}/>
-      <MetricCard label="Consumer demand" value="68.4" change="+2.8%" note="vs. previous sample" icon={Activity}/>
-      <MetricCard label="Emerging opportunities" value="24" change="+6 new" note="this month" icon={TrendingUp}/>
-      <MetricCard label="Market volatility" value="Moderate" change="—" note="within normal range" icon={ShieldAlert}/>
-    </div>
+    {error && !market && <div className="live-error" role="alert"><strong>Live data could not be loaded</strong><span>{error}</span><button className="small-action" onClick={refresh}>Try again</button></div>}
+    <div className="metric-grid">{cards.map(card=><MetricCard key={card.label} label={card.label} value={card.value} change={card.change} note={card.note} icon={card.icon}/>)}</div>
     <div className="dashboard-grid primary-grid">
-      <ChartCard title="Global market performance" subtitle={`${period === "recent" ? "Recent 3 months" : "Six sample months"} · illustrative values`} exportRows={visibleSeries} filename="global-market-performance">
-        <div className="chart-legend"><span><i className="legend-blue"/>Global market</span><span><i className="legend-green"/>Consumer demand</span></div>
-        <ResponsiveContainer width="100%" height={265}><AreaChart data={visibleSeries} margin={{top:10,right:8,left:-18,bottom:0}}>
-          <defs><linearGradient id="globalFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#5267e8" stopOpacity={0.18}/><stop offset="100%" stopColor="#5267e8" stopOpacity={0}/></linearGradient></defs>
-          <CartesianGrid stroke="#edf0f5" vertical={false}/><XAxis dataKey="month" tickLine={false} axisLine={false} tick={{fill:"#8991a3",fontSize:12}}/><YAxis tickLine={false} axisLine={false} tick={{fill:"#8991a3",fontSize:12}}/><Tooltip/>
-          <Area type="monotone" dataKey="global" name="Global market" stroke="#5267e8" strokeWidth={2.5} fill="url(#globalFill)"/><Line type="monotone" dataKey="demand" name="Consumer demand" stroke="#159a72" strokeWidth={2.2} dot={false}/>
-        </AreaChart></ResponsiveContainer>
+      <ChartCard title="S&P 500 · recent sessions" subtitle={sp500?.asOf ? `Public index quote · latest session ${new Date(sp500.asOf).toLocaleString()}` : "Recent daily observations returned by Yahoo Finance"} exportRows={chartRows} filename="sp500-recent-sessions">
+        <div className="chart-legend"><span><i className="legend-blue"/>S&P 500 closing level</span><a className="source-link" href="https://finance.yahoo.com/quote/%5EGSPC/" target="_blank" rel="noreferrer">Yahoo Finance <ExternalLink size={13}/></a></div>
+        {chartRows.length ? <ResponsiveContainer width="100%" height={265}><AreaChart data={chartRows} margin={{top:10,right:8,left:-18,bottom:0}}><defs><linearGradient id="globalFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#5267e8" stopOpacity={0.18}/><stop offset="100%" stopColor="#5267e8" stopOpacity={0}/></linearGradient></defs><CartesianGrid stroke="#edf0f5" vertical={false}/><XAxis dataKey="date" tickLine={false} axisLine={false} tick={{fill:"#8991a3",fontSize:12}}/><YAxis domain={["dataMin", "dataMax"]} tickLine={false} axisLine={false} tick={{fill:"#8991a3",fontSize:12}}/><Tooltip/><Area type="monotone" dataKey="value" name="S&P 500" stroke="#5267e8" strokeWidth={2.5} fill="url(#globalFill)"/></AreaChart></ResponsiveContainer> : <div className="live-state">A recent price history was not returned. Open Global Markets for the latest index quote.</div>}
       </ChartCard>
       <section className="panel regional-panel">
-        <div className="panel-heading"><div><h3>Regional momentum</h3><p>Growth index by region</p></div><button className="icon-button" title="View details" onClick={() => onNavigate("Geographic Intelligence")}><ArrowRight size={17}/></button></div>
-        <div className="region-list">{regionData.map((r, i) => <div className="region-row" key={r.region}><div className="region-meta"><span>{r.region}</span><strong>+{r.momentum}%</strong></div><div className="progress-track"><div style={{width:`${Math.min(r.momentum/13*100,100)}%`,background:["#5267e8","#159a72","#d99a28","#8a68d9","#e17b42"][i]}}/></div></div>)}</div>
-        <div className="insight-callout"><div className="callout-icon"><TrendingUp size={17}/></div><div><strong>Momentum leader</strong><p>South Asia shows the strongest illustrative momentum in this sample.</p></div></div>
+        <div className="panel-heading"><div><h3>Market breadth</h3><p>Latest available international index quotes</p></div><button className="icon-button" title="Open Global Markets" onClick={() => onNavigate("Global Markets")}><ArrowRight size={17}/></button></div>
+        <div className="region-list">{(market?.indices||[]).slice(0,5).map(row=><div className="region-row" key={row.symbol}><div className="region-meta"><span>{row.name}</span><strong className={Number(row.changePercent)>=0?"positive-change":"negative-change"}>{move(row.changePercent)}</strong></div><div className="progress-track"><div style={{width:`${Math.max(8,Math.min(Math.abs(Number(row.changePercent)||0)*8,100))}%`}}/></div></div>)}</div>
+        {!market && loading && <div className="live-state">Loading international market quotes…</div>}
+        <div className="insight-callout"><div className="callout-icon"><TrendingUp size={17}/></div><div><strong>More markets and macro data</strong><p>Compare indices, exchange rates, crypto assets, and country statistics.</p><button className="text-action" onClick={() => onNavigate("Global Markets")}>Explore Global Markets <ArrowRight size={14}/></button></div></div>
       </section>
     </div>
     <div className="dashboard-grid secondary-grid">
-      <ChartCard title="Consumer category growth" subtitle="Illustrative annual growth rate" exportRows={categoryData} filename="category-growth">
-        <ResponsiveContainer width="100%" height={250}><BarChart data={categoryData} layout="vertical" margin={{top:0,right:12,left:12,bottom:0}}>
-          <CartesianGrid stroke="#edf0f5" horizontal={false}/><XAxis type="number" tickLine={false} axisLine={false} tick={{fill:"#8991a3",fontSize:11}} unit="%"/><YAxis type="category" dataKey="name" width={105} tickLine={false} axisLine={false} tick={{fill:"#697386",fontSize:11}}/><Tooltip/><Bar dataKey="growth" name="Growth" fill="#5267e8" radius={[0,5,5,0]} barSize={15}/>
-        </BarChart></ResponsiveContainer>
-      </ChartCard>
+      <section className="panel consumer-overview-panel"><div className="panel-heading"><div><h3>Published consumer findings</h3><p>Numerator · reported for 2025</p></div><a className="source-link" href={numeratorSource.url} target="_blank" rel="noreferrer">Read report <ExternalLink size={13}/></a></div><div className="consumer-preview-grid">{consumerInsights.slice(0,3).map(item=><article key={item.label}><strong>{item.value}</strong><span>{item.label}</span></article>)}</div><p className="report-footnote">Published findings with their reporting period; not a real-time consumer panel feed.</p><button className="text-action" onClick={() => onNavigate("Consumer Trends")}>Explore consumer trends <ArrowRight size={14}/></button></section>
       <section className="panel news-panel">
-        <div className="panel-heading"><div><h3>Market signals</h3><p>Briefings · illustrative demo content</p></div><button className="text-action" onClick={() => onNavigate("Global Markets")}>View all <ArrowRight size={14}/></button></div>
-        <div className="news-list">{newsItems.map(item => <article className="news-item" key={item.title}><div className="news-meta"><span>{item.tag}</span><time>{item.time}</time></div><h4>{item.title}</h4><p>{item.body}</p></article>)}</div>
+        <div className="panel-heading"><div><h3>Build your signal list</h3><p>Save a market and follow its latest quote.</p></div><button className="text-action" onClick={() => onNavigate("Watchlists & Alerts")}>Open watchlist <ArrowRight size={14}/></button></div>
+        {(market?.indices||[]).slice(0,3).map(item=><article className="news-item market-signal-row" key={item.symbol}><div className="news-meta"><span>{item.region}</span><time>{item.asOf?new Date(item.asOf).toLocaleDateString():"Latest quote"}</time></div><h4>{item.name}</h4><p>{indexPoints(item.price)} pts <span className={Number(item.changePercent)>=0?"positive-change":"negative-change"}>{move(item.changePercent)}</span></p></article>)}
+        {!market && !loading && <div className="live-state">Quotes are unavailable right now. Try refreshing.</div>}
       </section>
     </div>
-    <p className="data-disclaimer">Demo environment · All displayed metrics and market briefings are illustrative and are not verified live market data.</p>
+    <p className="data-disclaimer">Public feeds may be delayed or temporarily unavailable. Annual economic indicators and published research retain their reporting years. <button className="text-action" onClick={() => onNavigate("Settings")}>Review data sources <ArrowRight size={14}/></button></p>
   </div>;
 }

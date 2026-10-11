@@ -1,12 +1,13 @@
 import React from "react";
 import {
-  Activity, Globe2, ShoppingBag, Layers3, MapPinned, Database,
+  Activity, Globe2, ShoppingBag, Layers3, MapPinned, Database, Radar,
   Bot, FileBarChart, Bookmark, Settings, PanelLeftClose
 } from "lucide-react";
 
 const items = [
   ["Overview", Activity], ["Global Markets", Globe2], ["Consumer Trends", ShoppingBag],
   ["Industries", Layers3], ["Geographic Intelligence", MapPinned], ["Company Data", Database],
+  ["Public Web Signals", Radar],
   ["AI Assistant", Bot], ["Reports & Exports", FileBarChart], ["Watchlists & Alerts", Bookmark],
   ["Settings", Settings]
 ];
@@ -27,8 +28,8 @@ export default function Sidebar({ active, onNavigate, collapsed, onToggle }) {
       </button>)}
     </nav>
     {!collapsed && <div className="sidebar-bottom">
-      <div className="plan-card"><div className="plan-dot"/> <div><strong>Demo workspace</strong><small>Sample data enabled</small></div></div>
-      <p>TRender v1.0 · Preview</p>
+      <div className="plan-card"><div className="plan-dot"/> <div><strong>Public data workspace</strong><small>Source-linked datasets</small></div></div>
+      <p>Trender · Market intelligence</p>
     </div>}
   </aside>;
 }
