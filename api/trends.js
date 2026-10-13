@@ -23,7 +23,7 @@ function readTag(block, tag) {
 function safeTrendUrl(value, geo, title) {
   try {
     const url = new URL(value);
-    if (url.protocol === "https:" && url.hostname === "trends.google.com") return url.toString();
+    if (url.protocol === "https:" && url.hostname === "trends.google.com" && url.pathname === "/trending" && url.searchParams.has("q")) return url.toString();
   } catch { /* Use the official Trends landing page when RSS omits a usable item URL. */ }
   return TREND_BASE + "?geo=" + encodeURIComponent(geo) + "&q=" + encodeURIComponent(title);
 }
