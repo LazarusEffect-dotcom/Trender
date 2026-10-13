@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { ExternalLink, Radar, RefreshCw, Search, Sparkles, TrendingUp, X } from "lucide-react";
 import MarkdownRenderer from "../components/MarkdownRenderer.jsx";
 import { TREND_REGIONS } from "../data/trendRegions.js";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import "../live.css";
 
 const FILTERS = [
@@ -9,6 +10,10 @@ const FILTERS = [
   { id: "web", label: "Public web activity" },
   { id: "platforms", label: "Hosting platforms" },
 ];
+
+function compactNumber(value) {
+  return new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 }).format(Number(value));
+}
 
 function categoryOf(item) {
   return item.source?.startsWith("Official ") ? "platforms" : "web";
@@ -71,6 +76,10 @@ export default function PublicWebSignals() {
   }, [data, filter, query]);
 
   const currentTrends = trendData?.region?.code === trendRegion ? trendData : null;
+  const trendChartData = useMemo(() => (currentTrends?.items || [])
+    .filter(item => Number.isFinite(item.approximateTrafficValue))
+    .sort((a, b) => b.approximateTrafficValue - a.approximateTrafficValue)
+    .slice(0, 8), [currentTrends]);
 
   async function synthesizeWithAi() {
     if ((!visible.length && !currentTrends?.items?.length) || aiLoading) return;
@@ -152,6 +161,7 @@ export default function PublicWebSignals() {
       {trendError && <div className="live-error" role="alert"><strong>Could not load Google Trends</strong><span>{trendError}</span><button className="small-action" onClick={() => loadTrends(trendRegion, true)}>Try again</button></div>}
       {trendLoading && !currentTrends && <div className="live-state" role="status">Loading current search trends…</div>}
       {currentTrends && <><div className="trend-status-line"><span className={currentTrends.status === "live" ? "live-dot" : "trend-muted-dot"}/><span>{currentTrends.status === "live" ? currentTrends.items.length + " current topics" : currentTrends.message}</span><time>Retrieved {new Date(currentTrends.retrievedAt).toLocaleString()}</time></div>
+        {trendChartData.length > 0 && <div className="trend-chart-card"><div className="trend-chart-heading"><strong>Topics with the largest traffic buckets</strong><span>Approximate lower bounds · Google Trends RSS</span></div><ResponsiveContainer width="100%" height={Math.max(225, trendChartData.length * 32 + 52)}><BarChart data={trendChartData} layout="vertical" margin={{ top: 4, right: 20, bottom: 4, left: 0 }}><CartesianGrid stroke="#edf0f5" horizontal={false}/><XAxis type="number" tickFormatter={compactNumber} tick={{ fill: "#8991a3", fontSize: 10 }} axisLine={false} tickLine={false}/><YAxis type="category" dataKey="title" width={148} tickFormatter={title => title.length > 20 ? title.slice(0, 18) + "…" : title} tick={{ fill: "#68758b", fontSize: 10 }} axisLine={false} tickLine={false}/><Tooltip formatter={value => [compactNumber(value) + "+ approx.", "Traffic bucket floor"]}/><Bar dataKey="approximateTrafficValue" name="Approximate search traffic" fill="#5267e8" radius={[0, 5, 5, 0]} maxBarSize={19}/></BarChart></ResponsiveContainer></div>}
         {currentTrends.status === "live" ? <ol className="google-trend-list">{currentTrends.items.map((item, index) => <li className="google-trend-row" key={item.title + index}><span className="google-trend-order">{String(index + 1).padStart(2, "0")}</span><a href={item.url} target="_blank" rel="noreferrer"><strong>{item.title}</strong><ExternalLink size={13}/></a><span className="google-trend-traffic">{item.approximateTraffic}<small>approx. search traffic</small></span><time>{item.publishedAt ? new Date(item.publishedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</time></li>)}</ol> : <div className="live-state">Google Trends returned no live items. You can still open the official page for this region.</div>}
         <p className="report-footnote">Google supplies approximate traffic buckets and refreshes its Trending Now data periodically. Search spikes indicate attention, not sales, market size, or purchase intent. <a href={currentTrends.sourceUrl} target="_blank" rel="noreferrer">View Google Trends source</a>.</p>
       </>}

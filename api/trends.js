@@ -20,6 +20,14 @@ function readTag(block, tag) {
   return match ? decodeXml(match[1].replace(/<[^>]+>/g, "")) : "";
 }
 
+function approximateTrafficValue(value = "") {
+  const match = String(value).replace(/,/g, "").trim().match(/^([\d.]+)\s*([KMB])?\+?$/i);
+  if (!match) return null;
+  const scale = { K: 1_000, M: 1_000_000, B: 1_000_000_000 }[String(match[2] || "").toUpperCase()] || 1;
+  const parsed = Number(match[1]) * scale;
+  return Number.isFinite(parsed) ? Math.round(parsed) : null;
+}
+
 function safeTrendUrl(value, geo, title) {
   try {
     const url = new URL(value);
@@ -41,6 +49,7 @@ function parseFeed(xml, geo) {
     items.push({
       title,
       approximateTraffic: readTag(block, "ht:approx_traffic") || "Not provided",
+      approximateTrafficValue: approximateTrafficValue(readTag(block, "ht:approx_traffic")),
       publishedAt: parsedDate && Number.isFinite(parsedDate.getTime()) ? parsedDate.toISOString() : null,
       url: safeTrendUrl(readTag(block, "link"), geo, title),
     });

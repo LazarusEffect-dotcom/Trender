@@ -4,6 +4,7 @@ import { Activity, ArrowRight, BellRing, Check, Download, ExternalLink, Globe2, 
 import { channelInsights, consumerInsights, numeratorSource } from "../data/consumerInsights.js";
 import { downloadCsv } from "../lib/csv.js";
 import { fetchPublicMarket } from "../lib/publicMarket.js";
+import { Bar, BarChart, CartesianGrid, Cell, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 const WATCHLIST_KEY = "trender.watchlist.v1";
 const SETTINGS_KEY = "trender.settings.v1";
@@ -65,6 +66,24 @@ function PageHeader({ active, intro, onRefresh, loading, updatedAt, onAskAi }) {
 
 function SourceLink({ href, children = "View source" }) {
   return <a className="source-link" href={href} target="_blank" rel="noreferrer">{children}<ExternalLink size={13}/></a>;
+}
+
+function ChangeBarChart({ title, description, items, sourceUrl = INDEX_SOURCE }) {
+  return <section className="panel live-panel market-chart-panel">
+    <div className="panel-heading"><div><h3>{title}</h3><p>{description}</p></div><SourceLink href={sourceUrl}>Yahoo Finance</SourceLink></div>
+    {items.length ? <ResponsiveContainer width="100%" height={Math.max(220, items.length * 34 + 54)}>
+      <BarChart data={items} layout="vertical" margin={{ top: 4, right: 16, bottom: 4, left: 0 }}>
+        <CartesianGrid stroke="#edf0f5" horizontal={false}/>
+        <XAxis type="number" domain={([minimum, maximum]) => [Math.min(minimum, 0), Math.max(maximum, 0)]} tickFormatter={value => `${Number(value).toFixed(1)}%`} tick={{ fill: "#8991a3", fontSize: 10 }} axisLine={false} tickLine={false}/>
+        <YAxis type="category" dataKey="name" width={142} tick={{ fill: "#68758b", fontSize: 10 }} axisLine={false} tickLine={false}/>
+        <Tooltip formatter={value => [percent(value), "Change vs prior close"]}/>
+        <ReferenceLine x={0} stroke="#b9c1d0" strokeDasharray="3 3"/>
+        <Bar dataKey="changePercent" name="Daily move" radius={[0, 5, 5, 0]} maxBarSize={19}>
+          {items.map(item => <Cell key={item.symbol} fill={Number(item.changePercent) >= 0 ? "#169a72" : "#d45460"}/>) }
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer> : <div className="live-state">Daily change data is not available for these instruments.</div>}
+  </section>;
 }
 
 function DataState({ loading, error, onRetry }) {
@@ -129,6 +148,10 @@ export default function GenericPage({ active, onNavigate, onAskAi }) {
     {data && <>
       <div className="live-toolbar"><span><span className="live-dot"/> {data.indices?.length || 0} global indices · delayed where noted</span><SourceLink href={INDEX_SOURCE}>Yahoo Finance market quotes</SourceLink></div>
       <section className="live-card-grid">{(data.indices || []).map(item => <article className="live-card" key={item.symbol}><div className="live-card-top"><span>{item.region}</span><WatchButton item={item} watchlist={watchlist} onToggle={toggleWatch}/></div><h3>{item.name}</h3><strong className="live-value">{instrumentValue(item)}</strong><span className={Number(item.changePercent) >= 0 ? "positive-change" : "negative-change"}>{percent(item.changePercent)}</span><small>Quote time {item.asOf ? new Date(item.asOf).toLocaleString() : "unavailable"}</small></article>)}</section>
+      <div className="live-two-column market-chart-grid">
+        <ChangeBarChart title="Global index moves" description="Percent change against the previous close" items={(data.indices || []).filter(item => item.changePercent !== null && item.changePercent !== undefined && Number.isFinite(Number(item.changePercent)))}/>
+        <ChangeBarChart title="Sector ETF moves" description="US sector proxies · daily percent change" items={(data.sectors || []).filter(item => item.changePercent !== null && item.changePercent !== undefined && Number.isFinite(Number(item.changePercent)))}/>
+      </div>
       <div className="live-two-column">
         <section className="panel live-panel"><div className="panel-heading"><div><h3>Currency reference rates</h3><p>Currency units per US dollar · {data.currencies?.[0]?.date || "latest available"}</p></div><SourceLink href="https://www.frankfurter.app/">ECB via Frankfurter</SourceLink></div><div className="table-scroll"><table><thead><tr><th>Pair</th><th>Reference rate</th><th>Published</th></tr></thead><tbody>{(data.currencies || []).map(row => <tr key={row.currency}><td>USD / {row.currency}</td><td>{Number(row.rate).toLocaleString(undefined,{maximumFractionDigits:4})}</td><td>{row.date}</td></tr>)}</tbody></table></div></section>
         <section className="panel live-panel"><div className="panel-heading"><div><h3>Digital assets</h3><p>Binance 24-hour spot ticker · quoted in USDT</p></div><SourceLink href="https://developers.binance.com/en/docs/products/spot/rest-api/market-data-endpoints">Binance market data</SourceLink></div><div className="table-scroll"><table><thead><tr><th>Asset</th><th>Price</th><th>24h move</th><th/></tr></thead><tbody>{(data.crypto || []).map(row => <tr key={row.symbol}><td><strong>{row.name}</strong><small>{row.symbol} / USDT</small></td><td>{money(row.price,row.currency)}</td><td className={Number(row.changePercent)>=0?"positive-change":"negative-change"}>{percent(row.changePercent)}</td><td><WatchButton item={row} watchlist={watchlist} onToggle={toggleWatch}/></td></tr>)}</tbody></table></div></section>

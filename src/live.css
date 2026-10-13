@@ -476,3 +476,12 @@ html[data-trender-theme="dark"] .live-trends-title h2, html[data-trender-theme="
 html[data-trender-theme="dark"] .live-trends-actions select { border-color: #33405b; background: #111a2b; color: #e6eaf4; }
 html[data-trender-theme="dark"] .google-trend-list, html[data-trender-theme="dark"] .google-trend-row { border-color: #27324a; }
 @media(max-width:700px) { .live-trends-heading { align-items: flex-start; flex-direction: column; } .live-trends-actions { width: 100%; flex-wrap: wrap; } .google-trend-row { grid-template-columns: 27px minmax(0,1fr) auto; gap: 8px; } .google-trend-row > time { display: none; } }
+
+.market-chart-grid { margin: 16px 0; }
+.market-chart-panel { min-width: 0; overflow: hidden; }
+.trend-chart-card { margin: 12px 0 16px; padding: 13px 12px 8px; border: 1px solid #edf0f5; border-radius: 11px; background: #fbfcff; }
+.trend-chart-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 7px; margin-bottom: 7px; }
+.trend-chart-heading strong { color: #34415a; font-size: 11px; }
+.trend-chart-heading span { color: #8b95a7; font-size: 9px; }
+html[data-trender-theme="dark"] .trend-chart-card { border-color: #27324a; background: #111a2b; }
+html[data-trender-theme="dark"] .trend-chart-heading strong { color: #e4e9f6; }
