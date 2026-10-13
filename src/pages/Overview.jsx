@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "../live.css";
-import { Activity, ArrowRight, ArrowUpRight, ExternalLink, Globe2, RefreshCw, TrendingUp, WalletCards } from "lucide-react";
+import { Activity, ArrowRight, ArrowUpRight, ExternalLink, Globe2, RefreshCw, Sparkles, TrendingUp, WalletCards } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import MetricCard from "../components/MetricCard.jsx";
 import ChartCard from "../components/ChartCard.jsx";
@@ -26,17 +26,43 @@ export default function Overview({ onNavigate }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [refreshedAt, setRefreshedAt] = useState("");
+
   const refresh = async () => {
     setLoading(true); setError("");
     try { const value = await fetchPublicMarket({ refresh: true }); setMarket(value); setRefreshedAt(new Date().toISOString()); }
     catch (reason) { setError(reason?.message || "Public market feeds are temporarily unavailable."); }
     finally { setLoading(false); }
   };
-  useEffect(() => { let mounted=true; fetchPublicMarket().then(value=>{if(mounted){setMarket(value);setRefreshedAt(new Date().toISOString());}}).catch(reason=>{if(mounted)setError(reason?.message||"Public market feeds are temporarily unavailable.");}).finally(()=>{if(mounted)setLoading(false);}); return ()=>{mounted=false;}; }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    fetchPublicMarket().then(value => {
+      if (mounted) { setMarket(value); setRefreshedAt(new Date().toISOString()); }
+    }).catch(reason => {
+      if (mounted) setError(reason?.message || "Public market feeds are temporarily unavailable.");
+    }).finally(() => {
+      if (mounted) setLoading(false);
+    });
+    return () => { mounted = false; };
+  }, []);
+
   const sp500 = market?.indices?.find(item => item.symbol === "^GSPC");
   const nasdaq = market?.indices?.find(item => item.symbol === "^IXIC");
   const bitcoin = market?.crypto?.find(item => item.symbol === "BTC");
   const euro = market?.currencies?.find(item => item.currency === "EUR");
+  const topSector = useMemo(() => {
+    const list = [...(market?.sectors || [])].sort((a, b) => (Number(b.changePercent) || 0) - (Number(a.changePercent) || 0));
+    return list[0];
+  }, [market]);
+
+  const aiPulseSummary = useMemo(() => {
+    if (!market) return "Loading current market quotes to synthesize today's market pulse briefing…";
+    const spMove = Number(sp500?.changePercent) || 0;
+    const btcMove = Number(bitcoin?.changePercent) || 0;
+    const sectorTxt = topSector ? ` leading sector ${topSector.name} is ${topSector.changePercent >= 0 ? "+" : ""}${Number(topSector.changePercent).toFixed(2)}%` : "";
+    return `Equities show ${spMove >= 0 ? "positive breadth" : "defensive positioning"} with S&P 500 at ${indexPoints(sp500?.price)} pts (${move(sp500?.changePercent)}). Bitcoin trades at ${currency(bitcoin?.price, "USD")} (${move(bitcoin?.changePercent)}),${sectorTxt}, and USD/EUR reference is ${euro?.rate ? Number(euro.rate).toFixed(4) : "stable"}.`;
+  }, [market, sp500, bitcoin, euro, topSector]);
+
   const chartRows = (sp500?.history || []).map(row => ({ ...row, symbol: "^GSPC", unit: "index points", source: sp500?.source || "Yahoo Finance public chart feed" }));
   const cards = [
     { label: "S&P 500", value: indexPoints(sp500?.price), change: move(sp500?.changePercent), note: "Index points · latest quote", icon: Globe2 },
@@ -44,14 +70,41 @@ export default function Overview({ onNavigate }) {
     { label: "Bitcoin", value: currency(bitcoin?.price, bitcoin?.currency || "USD"), change: move(bitcoin?.changePercent), note: "Binance spot · USDT quote", icon: WalletCards },
     { label: "USD / EUR", value: euro?.rate ? Number(euro.rate).toFixed(4) : "—", change: euro?.date || "ECB reference rate", note: "Units per US dollar", icon: TrendingUp },
   ];
+
   return <div className="page-content">
     <div className="page-heading">
-      <div><div className="eyebrow"><span className="live-dot"/> GLOBAL MARKET PULSE</div>
-        <h1>Markets, with the sources attached.</h1><p>Public quotes, exchange rates, and published consumer research in one view.</p><small className="freshness-note">{refreshedAt ? `Snapshot retrieved ${new Date(refreshedAt).toLocaleString()}` : "Use each source link to review its timing and methodology."}</small></div>
-      <div className="heading-actions"><button className="small-action" onClick={refresh} disabled={loading}><RefreshCw size={14} className={loading?"spin-icon":""}/>{loading?"Refreshing…":"Refresh"}</button><button className="primary-button" onClick={() => onNavigate("Reports & Exports")}>Build report <ArrowUpRight size={16}/></button></div>
+      <div>
+        <div className="eyebrow"><span className="live-dot"/> GLOBAL MARKET PULSE</div>
+        <h1>Markets, with the sources attached.</h1>
+        <p>Public quotes, exchange rates, and published consumer research in one view.</p>
+        <small className="freshness-note">{refreshedAt ? `Snapshot retrieved ${new Date(refreshedAt).toLocaleString()}` : "Use each source link to review its timing and methodology."}</small>
+      </div>
+      <div className="heading-actions">
+        <button className="small-action" onClick={refresh} disabled={loading}><RefreshCw size={14} className={loading?"spin-icon":""}/>{loading?"Refreshing…":"Refresh"}</button>
+        <button className="primary-button" onClick={() => onNavigate("Reports & Exports")}>Build report <ArrowUpRight size={16}/></button>
+      </div>
     </div>
+
     {error && !market && <div className="live-error" role="alert"><strong>Live data could not be loaded</strong><span>{error}</span><button className="small-action" onClick={refresh}>Try again</button></div>}
+
+    {/* AI Executive Market Briefing Banner */}
+    <div className="ai-pulse-banner">
+      <div className="ai-pulse-left">
+        <div className="ai-pulse-icon"><Sparkles size={20}/></div>
+        <div className="ai-pulse-copy">
+          <span className="ai-pulse-tag"><Sparkles size={11}/> Trender AI Market Pulse</span>
+          <p className="ai-pulse-text">{aiPulseSummary}</p>
+        </div>
+      </div>
+      <div className="ai-pulse-actions">
+        <button className="primary-button" onClick={() => onNavigate("AI Assistant")}>
+          Analyze with AI <ArrowUpRight size={14}/>
+        </button>
+      </div>
+    </div>
+
     <div className="metric-grid">{cards.map(card=><MetricCard key={card.label} label={card.label} value={card.value} change={card.change} note={card.note} icon={card.icon}/>)}</div>
+    
     <div className="dashboard-grid primary-grid">
       <ChartCard title="S&P 500 · recent sessions" subtitle={sp500?.asOf ? `Public index quote · latest session ${new Date(sp500.asOf).toLocaleString()}` : "Recent daily observations returned by Yahoo Finance"} exportRows={chartRows} filename="sp500-recent-sessions">
         <div className="chart-legend"><span><i className="legend-blue"/>S&P 500 closing level</span><a className="source-link" href="https://finance.yahoo.com/quote/%5EGSPC/" target="_blank" rel="noreferrer">Yahoo Finance <ExternalLink size={13}/></a></div>

@@ -28,6 +28,7 @@ export default function App() {
   const [collapsed, setCollapsed] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [assistantQuery, setAssistantQuery] = useState("");
   const searchInput = useRef(null);
 
   useEffect(() => {
@@ -55,7 +56,12 @@ export default function App() {
     setActive(page);
     setSearchOpen(false);
     setQuery("");
-    window.scrollTo({ top:0, behavior:"smooth" });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function askAi(promptText = "") {
+    setAssistantQuery(promptText);
+    navigate("AI Assistant");
   }
 
   useEffect(() => {
@@ -77,20 +83,25 @@ export default function App() {
   }, [searchOpen]);
 
   return <div className="app-shell">
-    <Sidebar active={active} onNavigate={navigate} collapsed={collapsed} onToggle={() => setCollapsed(v=>!v)}/>
+    <Sidebar active={active} onNavigate={navigate} collapsed={collapsed} onToggle={() => setCollapsed(v => !v)}/>
     <main className="main-shell">
-      <Topbar active={active} onSearch={() => setSearchOpen(true)} onHelp={() => navigate("AI Assistant")}/>
+      <Topbar active={active} onSearch={() => setSearchOpen(true)} onHelp={() => askAi("")}/>
       <Suspense fallback={<div className="page-loading" role="status"><span className="loading-orbit"/>Preparing your workspace…</div>}>
-        {active === "Overview" ? <Overview onNavigate={navigate}/> :
-         active === "Company Data" ? <CompanyData/> :
-         active === "AI Assistant" ? <Assistant/> :
-         active === "Public Web Signals" ? <PublicWebSignals/> :
-         <GenericPage active={active}/>}
+        {active === "Overview" ? <Overview onNavigate={navigate} onAskAi={askAi}/> :
+         active === "Company Data" ? <CompanyData onNavigate={navigate} onAskAi={askAi}/> :
+         active === "AI Assistant" ? <Assistant key={assistantQuery} initialQuery={assistantQuery}/> :
+         active === "Public Web Signals" ? <PublicWebSignals onNavigate={navigate} onAskAi={askAi}/> :
+         <GenericPage active={active} onNavigate={navigate} onAskAi={askAi}/>}
       </Suspense>
     </main>
     {searchOpen && <div className="command-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) setSearchOpen(false); }}>
       <section className="command-dialog" role="dialog" aria-modal="true" aria-label="Search Trender workspace">
-        <div className="command-search-row"><Search size={19}/><input ref={searchInput} value={query} onChange={event => setQuery(event.target.value)} onKeyDown={event => { if (event.key === "Enter" && matches[0]) navigate(matches[0].name); }} placeholder="Search your workspace…" aria-label="Search your workspace"/><kbd>ESC</kbd><button className="icon-button" onClick={() => setSearchOpen(false)} aria-label="Close search"><X size={18}/></button></div>
+        <div className="command-search-row">
+          <Search size={19}/>
+          <input ref={searchInput} value={query} onChange={event => setQuery(event.target.value)} onKeyDown={event => { if (event.key === "Enter" && matches[0]) navigate(matches[0].name); }} placeholder="Search your workspace…" aria-label="Search your workspace"/>
+          <kbd>ESC</kbd>
+          <button className="icon-button" onClick={() => setSearchOpen(false)} aria-label="Close search"><X size={18}/></button>
+        </div>
         <div className="command-caption">{query ? "MATCHING DESTINATIONS" : "QUICK NAVIGATION"}</div>
         <div className="command-results">{matches.map(item => <button key={item.name} className={`command-result ${active === item.name ? "current" : ""}`} onClick={() => navigate(item.name)}><span className="command-result-icon"><Command size={16}/></span><span className="command-result-copy"><strong>{item.name}</strong><small>{item.detail}</small></span><ArrowUpRight size={16} className="command-result-arrow"/></button>)}
           {matches.length === 0 && <div className="command-empty">No matches. Try a market, region, report, or workspace page.</div>}

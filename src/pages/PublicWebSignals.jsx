@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { ExternalLink, Radar, RefreshCw, Search } from "lucide-react";
+import { ExternalLink, Radar, RefreshCw, Search, Sparkles, X } from "lucide-react";
+import MarkdownRenderer from "../components/MarkdownRenderer.jsx";
 import "../live.css";
 
 const FILTERS = [
@@ -18,6 +19,8 @@ export default function PublicWebSignals() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
   const [query, setQuery] = useState("");
+  const [aiSynthesis, setAiSynthesis] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
 
   const load = useCallback(async (refresh = false) => {
     setLoading(true);
@@ -45,14 +48,65 @@ export default function PublicWebSignals() {
     });
   }, [data, filter, query]);
 
+  async function synthesizeWithAi() {
+    if (!data?.sources?.length || aiLoading) return;
+    setAiLoading(true);
+    try {
+      const sample = visible.slice(0, 12).map(s => ({ source: s.source, title: s.title, excerpt: s.excerpt }));
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: "Analyze these current open web signals, developer discussions, and hosting platforms. Synthesize them into 3 key technology themes and market shifts.",
+          context: { webSignals: sample },
+        }),
+      });
+      const res = await response.json().catch(() => ({}));
+      if (res.text) {
+        setAiSynthesis(res.text);
+      } else {
+        throw new Error(res.error || "Synthesis could not be completed.");
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
   return <div className="page-content live-page">
     <div className="page-heading live-page-heading">
       <div><div className="eyebrow"><span className="live-dot"/> OPEN WEB RESEARCH</div><h1>Public Web Signals</h1>
         <p>Explore current technology discussions and official website platform pages, with every item linked to its source.</p>
         <small className="freshness-note">{data?.fetchedAt ? `Snapshot retrieved ${new Date(data.fetchedAt).toLocaleString()}` : "Community activity is directional and does not measure total market demand."}</small>
       </div>
-      <button className="primary-button" onClick={() => load(true)} disabled={loading}><RefreshCw size={15} className={loading ? "spin-icon" : ""}/>{loading ? "Refreshing…" : "Refresh signals"}</button>
+      <div className="heading-actions">
+        <button className="primary-button" onClick={synthesizeWithAi} disabled={aiLoading || !data?.sources?.length}>
+          <Sparkles size={15} /> {aiLoading ? "Synthesizing…" : "Synthesize with AI"}
+        </button>
+        <button className="small-action" onClick={() => load(true)} disabled={loading}>
+          <RefreshCw size={15} className={loading ? "spin-icon" : ""}/>{loading ? "Refreshing…" : "Refresh signals"}
+        </button>
+      </div>
     </div>
+
+    {/* AI Synthesis Box */}
+    {aiSynthesis && (
+      <div className="panel ai-dataset-panel" style={{ marginBottom: 18 }}>
+        <div className="ai-dataset-header">
+          <div className="ai-dataset-title">
+            <Sparkles size={18} />
+            <strong>AI Web Signal Synthesis</strong>
+          </div>
+          <button className="icon-button" onClick={() => setAiSynthesis("")} aria-label="Close AI synthesis">
+            <X size={16} />
+          </button>
+        </div>
+        <div className="ai-insights-box">
+          <MarkdownRenderer content={aiSynthesis} />
+        </div>
+      </div>
+    )}
 
     <section className="web-signal-intro">
       <div className="web-signal-icon"><Radar size={20}/></div>

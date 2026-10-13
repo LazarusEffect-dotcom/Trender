@@ -4,76 +4,78 @@ Trender is a source-linked market intelligence workspace for comparing public ma
 
 ## Product features
 
-- Live public market overview with international indices, sector proxies, FX rates, and digital asset quotes.
-- Workspace search with `Ctrl+K` / `⌘K` quick navigation.
-- Numerator consumer-spending findings with the report period and original source link.
-- Country GDP and inflation indicators from World Bank Open Data.
-- Public web activity from Hacker News, GitHub, Webmasters Stack Exchange, and Wikimedia, plus official hosting/CMS pages.
-- Watchlists, price-threshold alerts, data exports, and saved display preferences.
-- Browser-only CSV and Excel analysis. Selected files are not uploaded or saved.
-- Trender Intelligence powered by free OpenRouter models on Vercel and grounded in the current public-data snapshot.
-- GitHub Actions build check and Vercel project configuration.
-
-Market quotes may be delayed. Currency rates use the latest published ECB reference day, macro indicators use the latest available annual observations, and the consumer figures are Numerator findings reported for 2025. The app labels the source and period beside each dataset.
+- **Live Public Market Overview**: International indices, sector proxies, FX rates, and digital asset quotes with provider timestamps.
+- **Trender Intelligence (Multi-Provider AI)**:
+  - Powered by **Google Gemini** (`gemini-2.0-flash` / `gemini-1.5-flash`), **OpenRouter Free models**, and **OpenAI**.
+  - **Zero-Config Grounded Local Analyst Engine**: Deterministic quantitative analysis and research reports running offline or without an API key.
+  - In-app **API Key Manager**: Configure custom keys in browser storage with instant connection validation.
+  - **AI Market Pulse Briefing**: Real-time executive takeaways rendered directly on the Overview dashboard.
+  - **AI Dataset Intelligence**: In-browser schema inspection, metric detection, and comparative benchmark insights on uploaded CSV/Excel files.
+  - **AI Web Signal Synthesis**: Automated theme extraction from Hacker News, GitHub, and Stack Exchange trends.
+- **Workspace Navigation**: Quick navigation with `Ctrl+K` / `⌘K` across all views.
+- **Numerator Consumer Findings**: Published 2025 consumer-spending and generational channel-shift findings with primary source links.
+- **World Bank Open Data**: Country GDP growth and CPI inflation indicators with explicit observation years.
+- **Open Web Activity Signals**: Curated feeds from Hacker News, GitHub, Webmasters Stack Exchange, and Wikimedia, plus official hosting/CMS platform comparisons.
+- **Watchlists, Alerts & Exports**: Persistent local watchlists, threshold evaluations, and single-click CSV exports.
+- **Zero-Upload In-Browser File Analytics**: Spreadsheets are parsed locally in browser memory and are never uploaded to remote databases.
 
 ## Run locally
 
 Requirements: Node.js 20 or newer and npm.
 
 ```powershell
-npm ci
+npm install
 Copy-Item .env.example .env.local
 npm run dev
 ```
 
-For the full live-data and AI experience locally, use `vercel dev` after adding `OPENROUTER_API_KEY` to `.env.local`. Plain `npm run dev` serves the Vite interface but does not run Vercel serverless functions.
+`npm run dev` now includes built-in API dev server middleware. Live market data, open web signals, and Trender AI work immediately out of the box in local development!
 
-Create a production build with:
+To test and build for production:
 
 ```powershell
 npm run build
 ```
 
-## GitHub, then Vercel
+## AI Configuration
 
-The source repository is [LazarusEffect-dotcom/Trender](https://github.com/LazarusEffect-dotcom/Trender). Push updates to its connected production branch to run the GitHub build check and trigger Vercel deployment:
+Trender Intelligence supports three tiers of AI configuration:
 
-GitHub Actions runs `.github/workflows/build.yml` on pushes to `main` and pull requests. In the connected Vercel project, keep the project root as `.`; `vercel.json` selects the Vite build and `dist` output. Set `OPENROUTER_API_KEY` for Preview and Production in Vercel's encrypted environment-variable settings. `OPENROUTER_MODELS` is optional; the default list contains only free routes. If you set it, use `openrouter/free` or model IDs ending in `:free`, separated by commas and ordered by preference. Add `OPENROUTER_SITE_URL` if you use a custom domain.
-
-To update the live app, push a commit to GitHub. The GitHub build check runs, and Vercel builds and deploys the connected branch.
-
-## OpenRouter model setup
-
-The OpenRouter API key is read only by `api/openrouter.js` on the server. Do not add it to a `VITE_*` variable, source file, or GitHub commit. Configure it in Vercel's encrypted environment-variable settings, then redeploy so the function can read it.
-
-The default fallback order is `openrouter/free`, `nvidia/nemotron-3-ultra-550b-a55b:free`, then `google/gemma-4-26b-a4b-it:free`. The assistant shows which model answered. OpenRouter free models have provider capacity limits.
-
-The assistant sends recent conversation turns and the public snapshot shown in the workspace to OpenRouter. Uploaded company files are never included. If the key is missing or a provider is unavailable, the assistant displays a clear connection error and never substitutes a canned answer.
+1. **Zero-Configuration (Grounded Local Analyst)**:
+   - Works immediately with no API keys.
+   - Evaluates the live market snapshot and generates structured research reports with quantitative tables and citations.
+2. **Google Gemini (Recommended)**:
+   - Add `GEMINI_API_KEY` to `.env.local` or enter it directly in the in-app **Set API Key** modal in the AI Assistant.
+   - Uses `gemini-2.0-flash` or `gemini-1.5-flash` with fast, multi-turn reasoning and grounded snapshot context.
+3. **OpenRouter**:
+   - Add `OPENROUTER_API_KEY` to `.env.local` or the AI Assistant key settings.
+   - Routes automatically to free open-source models (`openrouter/free`, `google/gemma-2-9b-it:free`, `meta-llama/llama-3.3-70b-instruct:free`).
+4. **OpenAI**:
+   - Add `OPENAI_API_KEY` to `.env.local` or the AI Assistant key settings to use `gpt-4o-mini`.
 
 ## Data and security
 
-- Yahoo Finance public chart feed: market index and sector ETF quotes; quotes may be delayed.
-- Frankfurter: latest published daily reference exchange rates sourced from the European Central Bank.
-- Binance public spot market data: BTC, ETH, and SOL 24-hour tickers quoted against USDT. These are Binance exchange prices, not a consolidated global market price.
-- World Bank Open Data: latest available annual GDP growth and inflation by country.
-- Numerator Generations Hub: published 2025 consumer-spending and channel-shift findings. Numerator's underlying purchase panel is proprietary; the app only shows findings published on the public page.
-- Public Web Signals: activity feeds from Hacker News, GitHub, Webmasters Stack Exchange, and Wikimedia, plus links to official HubSpot, Wix, WordPress.com, and Webflow pages. Community activity is directional and does not measure sales or market size.
-- Company data files are parsed in browser memory and are not uploaded or retained after leaving the page.
-- Do not upload confidential data until you have added authentication, appropriate access controls, and a reviewed storage workflow.
-- The AI endpoint has a small in-memory request limit per serverless instance. It is a useful guardrail, not a shared production rate limiter or user authentication system. Add an authenticated gateway and shared rate limiting before opening a billable AI endpoint to broad public traffic.
-- `.env.local` and other `.env` files are excluded from Git.
+- **Yahoo Finance public chart feed**: Market index and sector ETF quotes; quotes may be delayed.
+- **Frankfurter**: Latest published daily reference exchange rates sourced from the European Central Bank.
+- **Binance public spot market data**: BTC, ETH, and SOL 24-hour spot tickers quoted against USDT.
+- **World Bank Open Data**: Latest available annual GDP growth and inflation by country.
+- **Numerator Generations Hub**: Published 2025 consumer-spending findings.
+- **Public Web Signals**: Activity feeds from Hacker News, GitHub, Webmasters Stack Exchange, and Wikimedia.
+- **Company data files**: Processed entirely in browser client memory without server storage.
 
 ## Project layout
 
 ```text
-api/market.js                Public market-data aggregator for Vercel
-api/research.js              Cached open-web activity snapshot for Vercel
-api/openrouter.js            Free-only OpenRouter endpoint for Vercel
-src/pages/PublicWebSignals.jsx Interactive public-web and hosting source browser
-src/data/consumerInsights.js Published Numerator findings with reporting periods
-src/lib/publicMarket.js      Browser client for the public-data endpoint
-src/components/              Navigation, metric cards, and chart exports
-src/pages/                   Workspace and assistant screens
-.github/workflows/build.yml  GitHub build check
-vercel.json                  Vercel build and output settings
+api/market.js                Resilient public market-data aggregator with fallback snapshot
+api/research.js              Cached open-web activity snapshot for Vercel and local dev
+api/chat.js                  Unified multi-provider AI engine (Gemini, OpenRouter, OpenAI, Grounded Analyst)
+api/openrouter.js            Aliased endpoint maintaining backwards compatibility
+src/components/              Navigation, MetricCard, ChartCard, and MarkdownRenderer
+src/pages/Assistant.jsx      Trender Intelligence interface with model switcher & key manager
+src/pages/Overview.jsx       Executive dashboard with dynamic AI Market Pulse briefing
+src/pages/CompanyData.jsx    Private in-browser spreadsheet analysis with AI file intelligence
+src/pages/PublicWebSignals.jsx Open web research feed with AI theme synthesis
+src/pages/GenericPage.jsx    Global Markets, Consumer Trends, Industries, Geography, Reports, Settings
+vite.config.js               Vite configuration with dev API server middleware
+vercel.json                  Vercel serverless functions and routing configuration
 ```
