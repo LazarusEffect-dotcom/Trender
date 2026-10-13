@@ -15,7 +15,7 @@ Trender is a source-linked market intelligence workspace for comparing public ma
 - **Workspace Navigation**: Quick navigation with `Ctrl+K` / `⌘K` across all views.
 - **Numerator Consumer Findings**: Published 2025 consumer-spending and generational channel-shift findings with primary source links.
 - **World Bank Open Data**: Country GDP growth and CPI inflation indicators with explicit observation years.
-- **Open Web Activity Signals**: Curated feeds from Hacker News, GitHub, Webmasters Stack Exchange, and Wikimedia, plus official hosting/CMS platform comparisons.
+- **Open Web Activity Signals**: Current Google Trends RSS topics by region plus source-linked Hacker News, GitHub, Webmasters Stack Exchange, and Wikimedia indicators, alongside official hosting/CMS platform comparisons. Search activity is an attention signal, not a measure of sales or market share.
 - **Watchlists, Alerts & Exports**: Persistent local watchlists, threshold evaluations, and single-click CSV exports.
 - **Zero-Upload In-Browser File Analytics**: Spreadsheets are parsed locally in browser memory and are never uploaded to remote databases.
 
@@ -68,6 +68,7 @@ Trender Intelligence supports three tiers of AI configuration:
 ```text
 api/market.js                Resilient public market-data aggregator with fallback snapshot
 api/research.js              Cached open-web activity snapshot for Vercel and local dev
+api/trends.js                Regional Google Trends RSS feed with honest provider failure states
 api/chat.js                  Unified multi-provider AI engine (Gemini, OpenRouter, OpenAI, Grounded Analyst)
 api/openrouter.js            Aliased endpoint maintaining backwards compatibility
 src/components/              Navigation, MetricCard, ChartCard, and MarkdownRenderer
@@ -76,6 +77,7 @@ src/pages/Overview.jsx       Executive dashboard with dynamic AI Market Pulse br
 src/pages/CompanyData.jsx    Private in-browser spreadsheet analysis with AI file intelligence
 src/pages/PublicWebSignals.jsx Open web research feed with AI theme synthesis
 src/pages/GenericPage.jsx    Global Markets, Consumer Trends, Industries, Geography, Reports, Settings
+src/data/trendRegions.js     Supported regions for live Google Trends requests
 vite.config.js               Vite configuration with dev API server middleware
 vercel.json                  Vercel serverless functions and routing configuration
 ```

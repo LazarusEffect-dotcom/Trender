@@ -47,6 +47,10 @@ function apiDevServerPlugin() {
             const mod = await import("./api/research.js");
             return mod.default(req, res);
           }
+          if (pathname === "/api/trends") {
+            const mod = await import("./api/trends.js");
+            return mod.default(req, res);
+          }
           if (pathname === "/api/chat" || pathname === "/api/openrouter") {
             const mod = await import("./api/chat.js");
             return mod.default(req, res);
