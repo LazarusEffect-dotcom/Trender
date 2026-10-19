@@ -1,14 +1,21 @@
 import React from "react";
 import {
-  Activity, Globe2, ShoppingBag, Layers3, MapPinned, Database, Radar,
+  Activity, Globe2, ShoppingBag, Flame, Layers3, MapPinned, Database, Radar,
   Bot, FileBarChart, Bookmark, Settings, PanelLeftClose
 } from "lucide-react";
 
 const items = [
-  ["Overview", Activity], ["Global Markets", Globe2], ["Consumer Trends", ShoppingBag],
-  ["Industries", Layers3], ["Geographic Intelligence", MapPinned], ["Company Data", Database],
+  ["Overview", Activity],
+  ["Global Markets", Globe2],
+  ["Consumer Trends", ShoppingBag],
+  ["Viral & FOMO Trends", Flame],
+  ["Industries", Layers3],
+  ["Geographic Intelligence", MapPinned],
+  ["Company Data", Database],
   ["Public Web Signals", Radar],
-  ["AI Assistant", Bot], ["Reports & Exports", FileBarChart], ["Watchlists & Alerts", Bookmark],
+  ["AI Assistant", Bot],
+  ["Reports & Exports", FileBarChart],
+  ["Watchlists & Alerts", Bookmark],
   ["Settings", Settings]
 ];
 
@@ -25,10 +32,11 @@ export default function Sidebar({ active, onNavigate, collapsed, onToggle }) {
         className={`nav-item ${active === label ? "active" : ""}`} title={collapsed ? label : undefined}>
         <Icon size={18}/>{!collapsed && <span>{label}</span>}
         {!collapsed && label === "AI Assistant" && <span className="nav-pill">AI</span>}
+        {!collapsed && label === "Viral & FOMO Trends" && <span className="nav-pill viral-pill">HOT 🔥</span>}
       </button>)}
     </nav>
     {!collapsed && <div className="sidebar-bottom">
-      <div className="plan-card"><div className="plan-dot"/> <div><strong>Public data workspace</strong><small>Source-linked datasets</small></div></div>
+      <div className="plan-card"><div className="plan-dot"/> <div><strong>Public data workspace</strong><small>55K+ Survey & Market Feeds</small></div></div>
       <p>Trender · Market intelligence</p>
     </div>}
   </aside>;

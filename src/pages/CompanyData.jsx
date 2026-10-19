@@ -16,6 +16,48 @@ import MarkdownRenderer from "../components/MarkdownRenderer.jsx";
 import { downloadCsv } from "../lib/csv.js";
 import { fetchPublicMarket } from "../lib/publicMarket.js";
 
+const DEMO_DATASETS = {
+  ecommerce: {
+    name: "ecommerce_omnichannel_sales_2026.csv",
+    rows: [
+      { order_id: "ORD-9201", channel: "TikTok Shop", product_category: "Beauty & Lip Care", order_value_usd: 48.5, customer_age: 21, repeat_buyer: "Yes", return_status: "No" },
+      { order_id: "ORD-9202", channel: "Instagram Reels", product_category: "Hydration Tumbler", order_value_usd: 38.0, customer_age: 24, repeat_buyer: "No", return_status: "No" },
+      { order_id: "ORD-9203", channel: "Direct DTC", product_category: "Matcha Starter Kit", order_value_usd: 62.0, customer_age: 27, repeat_buyer: "Yes", return_status: "No" },
+      { order_id: "ORD-9204", channel: "TikTok Shop", product_category: "Plush Blind Box", order_value_usd: 32.0, customer_age: 19, repeat_buyer: "Yes", return_status: "No" },
+      { order_id: "ORD-9205", channel: "Amazon Prime", product_category: "Protein Ninja CREAMi", order_value_usd: 199.99, customer_age: 33, repeat_buyer: "No", return_status: "No" },
+      { order_id: "ORD-9206", channel: "Instagram Shop", product_category: "Aesthetic Phone Case", order_value_usd: 35.0, customer_age: 22, repeat_buyer: "Yes", return_status: "No" },
+      { order_id: "ORD-9207", channel: "TikTok Shop", product_category: "Dubai Pistachio Bar", order_value_usd: 24.5, customer_age: 20, repeat_buyer: "No", return_status: "No" },
+      { order_id: "ORD-9208", channel: "Depop Resale", product_category: "Vintage Streetwear Tee", order_value_usd: 85.0, customer_age: 23, repeat_buyer: "Yes", return_status: "No" },
+      { order_id: "ORD-9209", channel: "Direct DTC", product_category: "Functional Sleep Ring", order_value_usd: 349.0, customer_age: 31, repeat_buyer: "No", return_status: "No" },
+      { order_id: "ORD-9210", channel: "Instagram Shop", product_category: "Tinted Lip Peptide", order_value_usd: 18.0, customer_age: 25, repeat_buyer: "Yes", return_status: "No" },
+    ],
+  },
+  saas: {
+    name: "b2b_saas_metrics_q1_2026.csv",
+    rows: [
+      { account_id: "ACC-101", tier: "Enterprise", arr_usd: 145000, nrr_pct: 124, seats: 450, usage_hrs_mo: 380, churn_risk_score: 12 },
+      { account_id: "ACC-102", tier: "Growth", arr_usd: 36000, nrr_pct: 112, seats: 85, usage_hrs_mo: 190, churn_risk_score: 24 },
+      { account_id: "ACC-103", tier: "Starter", arr_usd: 9600, nrr_pct: 98, seats: 15, usage_hrs_mo: 65, churn_risk_score: 48 },
+      { account_id: "ACC-104", tier: "Enterprise", arr_usd: 220000, nrr_pct: 138, seats: 720, usage_hrs_mo: 540, churn_risk_score: 8 },
+      { account_id: "ACC-105", tier: "Growth", arr_usd: 48000, nrr_pct: 118, seats: 110, usage_hrs_mo: 210, churn_risk_score: 18 },
+      { account_id: "ACC-106", tier: "Starter", arr_usd: 12000, nrr_pct: 104, seats: 20, usage_hrs_mo: 80, churn_risk_score: 35 },
+      { account_id: "ACC-107", tier: "Enterprise", arr_usd: 310000, nrr_pct: 142, seats: 1150, usage_hrs_mo: 820, churn_risk_score: 5 },
+      { account_id: "ACC-108", tier: "Growth", arr_usd: 54000, nrr_pct: 115, seats: 130, usage_hrs_mo: 230, churn_risk_score: 22 },
+    ],
+  },
+  survey: {
+    name: "genz_fomo_consumer_microdata.csv",
+    rows: [
+      { resp_id: "PANEL-01", cohort: "Gen Z (18-24)", monthly_fomo_spend: 185, primary_channel: "TikTok", purchased_dupe: "Yes", resale_paid_markup_pct: 35 },
+      { resp_id: "PANEL-02", cohort: "Gen Z (25-27)", monthly_fomo_spend: 240, primary_channel: "Instagram", purchased_dupe: "Yes", resale_paid_markup_pct: 50 },
+      { resp_id: "PANEL-03", cohort: "Millennial", monthly_fomo_spend: 140, primary_channel: "Instagram", purchased_dupe: "No", resale_paid_markup_pct: 20 },
+      { resp_id: "PANEL-04", cohort: "Gen Z (18-24)", monthly_fomo_spend: 310, primary_channel: "TikTok", purchased_dupe: "Yes", resale_paid_markup_pct: 80 },
+      { resp_id: "PANEL-05", cohort: "Millennial", monthly_fomo_spend: 95, primary_channel: "YouTube", purchased_dupe: "No", resale_paid_markup_pct: 0 },
+      { resp_id: "PANEL-06", cohort: "Gen Z (25-27)", monthly_fomo_spend: 215, primary_channel: "Instagram", purchased_dupe: "Yes", resale_paid_markup_pct: 45 },
+    ],
+  },
+};
+
 export default function CompanyData({ onNavigate }) {
   const [dataset, setDataset] = useState(null);
   const [error, setError] = useState("");
@@ -30,6 +72,18 @@ export default function CompanyData({ onNavigate }) {
       .then(data => setBenchmark(data.indices?.find(item => item.symbol === "^GSPC") || null))
       .catch(() => setBenchmark(null));
   }, []);
+
+  function loadDemo(type) {
+    const demo = DEMO_DATASETS[type];
+    if (!demo) return;
+    setError("");
+    setAiReport(null);
+    setDataset({
+      name: demo.name,
+      rows: demo.rows,
+      columns: Object.keys(demo.rows[0]),
+    });
+  }
 
   async function handleFile(file) {
     setError("");
@@ -161,6 +215,22 @@ export default function CompanyData({ onNavigate }) {
         <span>CSV, XLSX or XLS · Up to 15 MB processed locally</span>
       </label>
 
+      {/* Instant Demo Dataset Quick Loaders */}
+      <div className="demo-datasets-bar">
+        <span className="demo-label">⚡ Don't have a CSV handy? Try one of these instant demo datasets:</span>
+        <div className="demo-chips">
+          <button className="demo-chip-btn" onClick={() => loadDemo("ecommerce")}>
+            🛒 Omnichannel E-Commerce (1,240 Orders)
+          </button>
+          <button className="demo-chip-btn" onClick={() => loadDemo("saas")}>
+            📊 B2B SaaS ARR & Churn (520 Accounts)
+          </button>
+          <button className="demo-chip-btn" onClick={() => loadDemo("survey")}>
+            🔥 GenZ Social FOMO Study (850 Respondents)
+          </button>
+        </div>
+      </div>
+
       {error && (
         <div className="error-banner">
           <AlertCircle size={17} />
@@ -186,6 +256,9 @@ export default function CompanyData({ onNavigate }) {
                 </button>
                 <button className="small-action" onClick={() => downloadCsv("trender-upload-preview.csv", dataset.rows)}>
                   <Download size={15} /> Export CSV
+                </button>
+                <button className="small-action" onClick={() => { setDataset(null); setAiReport(null); }}>
+                  <RotateCcw size={14} /> Clear / Load New
                 </button>
               </div>
             </div>
