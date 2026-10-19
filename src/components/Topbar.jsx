@@ -74,7 +74,7 @@ export default function Topbar({
         {/* GenZ Mode Instant Switch */}
         <button
           className={`genz-toggle-btn ${genzMode ? "active" : ""}`}
-          onClick={onToggleGenzMode}
+          onClick={() => onToggleGenzMode && onToggleGenzMode()}
           title={genzMode ? "GenZ Mode Active: Showing crisp modern slang explanations" : "Switch on GenZ Mode for snappy slang & analogies"}
           aria-label="Toggle GenZ Market Lingo"
         >
@@ -85,7 +85,7 @@ export default function Topbar({
         {/* GenZ Lingo Dictionary Trigger */}
         <button
           className="small-action genz-lingo-btn"
-          onClick={onOpenGenzLingo}
+          onClick={() => onOpenGenzLingo && onOpenGenzLingo()}
           title="Open GenZ Market & Trading Dictionary"
         >
           <Sparkles size={14}/>
@@ -113,7 +113,10 @@ export default function Topbar({
         <div className="profile-dropdown-wrapper" ref={profileRef}>
           <button
             className="workspace-profile-btn"
-            onClick={() => setProfileOpen(prev => !prev)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setProfileOpen(prev => !prev);
+            }}
             aria-expanded={profileOpen}
             aria-haspopup="true"
             aria-label="Open User Profile and Workspace Settings"
@@ -124,7 +127,7 @@ export default function Topbar({
           </button>
 
           {profileOpen && (
-            <div className="profile-popover" role="menu">
+            <div className="profile-popover" role="menu" onClick={(e) => e.stopPropagation()}>
               <div className="profile-popover-header">
                 <div className="popover-avatar">A</div>
                 <div>
@@ -138,7 +141,7 @@ export default function Topbar({
                 <button
                   className="profile-menu-item"
                   onClick={() => {
-                    onToggleGenzMode();
+                    onToggleGenzMode && onToggleGenzMode();
                     setProfileOpen(false);
                   }}
                 >
@@ -150,7 +153,7 @@ export default function Topbar({
                 <button
                   className="profile-menu-item"
                   onClick={() => {
-                    onOpenGenzLingo();
+                    onOpenGenzLingo && onOpenGenzLingo();
                     setProfileOpen(false);
                   }}
                 >

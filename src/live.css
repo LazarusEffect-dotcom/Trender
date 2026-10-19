@@ -1029,3 +1029,181 @@ html[data-trender-theme="dark"] .demo-datasets-bar { background: #131c30; border
 html[data-trender-theme="dark"] .demo-label { color: #a4b0c6; }
 html[data-trender-theme="dark"] .demo-chip-btn { background: #172138; border-color: #2c3a5c; color: #8ea3ff; }
 html[data-trender-theme="dark"] .demo-chip-btn:hover { background: #1e2c4c; }
+
+/* ═══════ Animated Theme & Motion Design ═══════ */
+@keyframes trender-gradient-drift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes trender-fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes trender-scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes trender-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes trender-pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(82, 103, 232, 0.35); }
+  70% { box-shadow: 0 0 0 8px rgba(82, 103, 232, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(82, 103, 232, 0); }
+}
+@keyframes trender-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes trender-glow-border {
+  0%, 100% { border-color: #e8ebf2; }
+  50% { border-color: #bfc9ff; }
+}
+
+/* Animated gradient banner */
+.ai-pulse-banner {
+  background-size: 200% 200% !important;
+  animation: trender-gradient-drift 8s ease infinite !important;
+}
+
+/* Cards fade-up on load */
+.live-card, .metric-card, .panel, .export-panel, .consumer-stat, .channel-stat {
+  animation: trender-fade-up 0.45s ease both;
+}
+.live-card:nth-child(2), .metric-card:nth-child(2) { animation-delay: 0.06s; }
+.live-card:nth-child(3), .metric-card:nth-child(3) { animation-delay: 0.12s; }
+.live-card:nth-child(4), .metric-card:nth-child(4) { animation-delay: 0.18s; }
+.live-card:nth-child(5) { animation-delay: 0.24s; }
+.live-card:nth-child(6) { animation-delay: 0.30s; }
+
+/* Hover lift for all cards */
+.live-card, .metric-card, .feature-card, .export-panel, .genz-term-card, .web-signal-card {
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+.live-card:hover, .metric-card:hover, .feature-card:hover, .export-panel:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(20, 30, 60, 0.08);
+}
+
+/* Pulsing live-dot */
+.live-dot {
+  animation: trender-pulse-ring 2s ease infinite;
+}
+
+/* Shimmer loading skeleton */
+.page-loading {
+  background: linear-gradient(90deg, #f0f2f7 25%, #e4e8f0 50%, #f0f2f7 75%);
+  background-size: 200% 100%;
+  animation: trender-shimmer 1.5s ease infinite;
+  border-radius: 12px;
+  padding: 60px;
+  text-align: center;
+}
+.loading-orbit {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #dce0eb;
+  border-top-color: #5267e8;
+  border-radius: 50%;
+  animation: trender-spin 0.8s linear infinite;
+  margin-right: 10px;
+  vertical-align: middle;
+}
+
+/* Floating assistant symbol */
+.assistant-symbol, .sparkle-circle, .ai-pulse-icon {
+  animation: trender-float 3s ease-in-out infinite;
+}
+
+/* Glowing border for viral spotlight */
+.viral-spotlight-card {
+  animation: trender-glow-border 3s ease infinite, trender-fade-up 0.5s ease both;
+}
+
+/* Command dialog entrance */
+.command-dialog {
+  animation: trender-scale-in 0.2s ease;
+}
+.command-backdrop {
+  animation: trender-fade-up 0.15s ease;
+}
+
+/* Smooth sidebar nav transitions */
+.nav-item {
+  transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+.nav-item:active {
+  transform: scale(0.97);
+}
+
+/* Animated profile popover */
+.profile-popover {
+  animation: trender-scale-in 0.18s ease;
+  transform-origin: top right;
+}
+
+/* GenZ Modal entrance */
+.genz-modal-dialog {
+  animation: trender-scale-in 0.22s ease;
+}
+
+/* Button press micro-interaction */
+.primary-button {
+  transition: background 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+}
+.primary-button:active {
+  transform: scale(0.96);
+}
+
+/* Survey tab btn smooth switch */
+.survey-tab-btn {
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Topbar subtle gradient */
+.topbar {
+  background: linear-gradient(180deg, #ffffff 0%, #fcfcfe 100%);
+  transition: box-shadow 0.3s ease;
+}
+
+/* Sidebar glow on brand mark */
+.brand-mark {
+  transition: box-shadow 0.3s ease;
+}
+.brand-mark:hover {
+  box-shadow: 0 4px 20px rgba(82, 103, 232, 0.45);
+}
+
+/* Rotating chevron in profile dropdown */
+.rotate-arrow {
+  transition: transform 0.2s ease;
+  transform: rotate(180deg);
+}
+
+/* Smooth chart card transitions */
+.chart-interactive-controls {
+  transition: opacity 0.3s ease;
+}
+
+/* Table row hover */
+.live-panel tbody tr {
+  transition: background 0.15s ease;
+}
+.live-panel tbody tr:hover {
+  background: #f8f9fd;
+}
+html[data-trender-theme="dark"] .live-panel tbody tr:hover {
+  background: #1a2340;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

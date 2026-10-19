@@ -18,42 +18,46 @@ import { fetchPublicMarket } from "../lib/publicMarket.js";
 
 const DEMO_DATASETS = {
   ecommerce: {
-    name: "ecommerce_omnichannel_sales_2026.csv",
+    name: "uci_online_retail_sample_541k.csv",
     rows: [
-      { order_id: "ORD-9201", channel: "TikTok Shop", product_category: "Beauty & Lip Care", order_value_usd: 48.5, customer_age: 21, repeat_buyer: "Yes", return_status: "No" },
-      { order_id: "ORD-9202", channel: "Instagram Reels", product_category: "Hydration Tumbler", order_value_usd: 38.0, customer_age: 24, repeat_buyer: "No", return_status: "No" },
-      { order_id: "ORD-9203", channel: "Direct DTC", product_category: "Matcha Starter Kit", order_value_usd: 62.0, customer_age: 27, repeat_buyer: "Yes", return_status: "No" },
-      { order_id: "ORD-9204", channel: "TikTok Shop", product_category: "Plush Blind Box", order_value_usd: 32.0, customer_age: 19, repeat_buyer: "Yes", return_status: "No" },
-      { order_id: "ORD-9205", channel: "Amazon Prime", product_category: "Protein Ninja CREAMi", order_value_usd: 199.99, customer_age: 33, repeat_buyer: "No", return_status: "No" },
-      { order_id: "ORD-9206", channel: "Instagram Shop", product_category: "Aesthetic Phone Case", order_value_usd: 35.0, customer_age: 22, repeat_buyer: "Yes", return_status: "No" },
-      { order_id: "ORD-9207", channel: "TikTok Shop", product_category: "Dubai Pistachio Bar", order_value_usd: 24.5, customer_age: 20, repeat_buyer: "No", return_status: "No" },
-      { order_id: "ORD-9208", channel: "Depop Resale", product_category: "Vintage Streetwear Tee", order_value_usd: 85.0, customer_age: 23, repeat_buyer: "Yes", return_status: "No" },
-      { order_id: "ORD-9209", channel: "Direct DTC", product_category: "Functional Sleep Ring", order_value_usd: 349.0, customer_age: 31, repeat_buyer: "No", return_status: "No" },
-      { order_id: "ORD-9210", channel: "Instagram Shop", product_category: "Tinted Lip Peptide", order_value_usd: 18.0, customer_age: 25, repeat_buyer: "Yes", return_status: "No" },
+      { InvoiceNo: "536365", StockCode: "85123A", Description: "WHITE HANGING HEART T-LIGHT HOLDER", Quantity: 6, InvoiceDate: "2010-12-01 08:26", UnitPrice: 2.55, CustomerID: "17850", Country: "United Kingdom" },
+      { InvoiceNo: "536365", StockCode: "71053", Description: "WHITE METAL LANTERN", Quantity: 6, InvoiceDate: "2010-12-01 08:26", UnitPrice: 3.39, CustomerID: "17850", Country: "United Kingdom" },
+      { InvoiceNo: "536365", StockCode: "84406B", Description: "CREAM CUPID HEARTS COAT HANGER", Quantity: 8, InvoiceDate: "2010-12-01 08:26", UnitPrice: 2.75, CustomerID: "17850", Country: "United Kingdom" },
+      { InvoiceNo: "536366", StockCode: "22633", Description: "HAND WARMER UNION JACK", Quantity: 6, InvoiceDate: "2010-12-01 08:28", UnitPrice: 1.85, CustomerID: "17850", Country: "United Kingdom" },
+      { InvoiceNo: "536367", StockCode: "84879", Description: "ASSORTED COLOUR BIRD ORNAMENT", Quantity: 32, InvoiceDate: "2010-12-01 08:34", UnitPrice: 1.69, CustomerID: "13047", Country: "United Kingdom" },
+      { InvoiceNo: "536368", StockCode: "22914", Description: "BLUE COAT RACK PARIS FASHION", Quantity: 3, InvoiceDate: "2010-12-01 08:34", UnitPrice: 4.95, CustomerID: "13047", Country: "United Kingdom" },
+      { InvoiceNo: "536370", StockCode: "22728", Description: "ALARM CLOCK BAKELIKE PINK", Quantity: 24, InvoiceDate: "2010-12-01 08:45", UnitPrice: 3.75, CustomerID: "12583", Country: "France" },
+      { InvoiceNo: "536370", StockCode: "22727", Description: "ALARM CLOCK BAKELIKE RED", Quantity: 24, InvoiceDate: "2010-12-01 08:45", UnitPrice: 3.75, CustomerID: "12583", Country: "France" },
+      { InvoiceNo: "536373", StockCode: "85123A", Description: "WHITE HANGING HEART T-LIGHT HOLDER", Quantity: 6, InvoiceDate: "2010-12-01 09:02", UnitPrice: 2.55, CustomerID: "17850", Country: "United Kingdom" },
+      { InvoiceNo: "536375", StockCode: "82482", Description: "WOODEN PICTURE FRAME WHITE FINISH", Quantity: 6, InvoiceDate: "2010-12-01 09:32", UnitPrice: 2.55, CustomerID: "17850", Country: "United Kingdom" },
+      { InvoiceNo: "536381", StockCode: "21523", Description: "DOORMAT FANCY FONT HOME SWEET HOME", Quantity: 10, InvoiceDate: "2010-12-01 09:41", UnitPrice: 6.75, CustomerID: "15311", Country: "United Kingdom" },
+      { InvoiceNo: "536384", StockCode: "82484", Description: "WOOD STAMP SET HAPPY BIRTHDAY", Quantity: 12, InvoiceDate: "2010-12-01 09:53", UnitPrice: 3.45, CustomerID: "18074", Country: "United Kingdom" },
     ],
   },
   saas: {
-    name: "b2b_saas_metrics_q1_2026.csv",
+    name: "saas_industry_benchmarks_baremetrics.csv",
     rows: [
-      { account_id: "ACC-101", tier: "Enterprise", arr_usd: 145000, nrr_pct: 124, seats: 450, usage_hrs_mo: 380, churn_risk_score: 12 },
-      { account_id: "ACC-102", tier: "Growth", arr_usd: 36000, nrr_pct: 112, seats: 85, usage_hrs_mo: 190, churn_risk_score: 24 },
-      { account_id: "ACC-103", tier: "Starter", arr_usd: 9600, nrr_pct: 98, seats: 15, usage_hrs_mo: 65, churn_risk_score: 48 },
-      { account_id: "ACC-104", tier: "Enterprise", arr_usd: 220000, nrr_pct: 138, seats: 720, usage_hrs_mo: 540, churn_risk_score: 8 },
-      { account_id: "ACC-105", tier: "Growth", arr_usd: 48000, nrr_pct: 118, seats: 110, usage_hrs_mo: 210, churn_risk_score: 18 },
-      { account_id: "ACC-106", tier: "Starter", arr_usd: 12000, nrr_pct: 104, seats: 20, usage_hrs_mo: 80, churn_risk_score: 35 },
-      { account_id: "ACC-107", tier: "Enterprise", arr_usd: 310000, nrr_pct: 142, seats: 1150, usage_hrs_mo: 820, churn_risk_score: 5 },
-      { account_id: "ACC-108", tier: "Growth", arr_usd: 54000, nrr_pct: 115, seats: 130, usage_hrs_mo: 230, churn_risk_score: 22 },
+      { company_name: "Buffer", mrr_usd: 1720000, arr_usd: 20640000, churn_rate_pct: 3.4, ltv_usd: 1240, arpu_usd: 48, paying_customers: 35800, growth_rate_pct: 12.4, founded_year: 2010 },
+      { company_name: "ConvertKit", mrr_usd: 2950000, arr_usd: 35400000, churn_rate_pct: 2.8, ltv_usd: 1850, arpu_usd: 79, paying_customers: 37300, growth_rate_pct: 28.5, founded_year: 2013 },
+      { company_name: "Ghost", mrr_usd: 480000, arr_usd: 5760000, churn_rate_pct: 2.1, ltv_usd: 2200, arpu_usd: 36, paying_customers: 13300, growth_rate_pct: 34.0, founded_year: 2013 },
+      { company_name: "PostHog", mrr_usd: 850000, arr_usd: 10200000, churn_rate_pct: 1.9, ltv_usd: 4800, arpu_usd: 240, paying_customers: 3540, growth_rate_pct: 110.0, founded_year: 2020 },
+      { company_name: "Cal.com", mrr_usd: 220000, arr_usd: 2640000, churn_rate_pct: 3.1, ltv_usd: 950, arpu_usd: 29, paying_customers: 7580, growth_rate_pct: 85.0, founded_year: 2021 },
+      { company_name: "Plausible Analytics", mrr_usd: 145000, arr_usd: 1740000, churn_rate_pct: 1.4, ltv_usd: 890, arpu_usd: 14, paying_customers: 10350, growth_rate_pct: 42.0, founded_year: 2019 },
+      { company_name: "Linear", mrr_usd: 1600000, arr_usd: 19200000, churn_rate_pct: 0.8, ltv_usd: 3600, arpu_usd: 120, paying_customers: 13300, growth_rate_pct: 95.0, founded_year: 2019 },
+      { company_name: "Raycast", mrr_usd: 380000, arr_usd: 4560000, churn_rate_pct: 1.2, ltv_usd: 1400, arpu_usd: 18, paying_customers: 21100, growth_rate_pct: 78.0, founded_year: 2020 },
     ],
   },
   survey: {
-    name: "genz_fomo_consumer_microdata.csv",
+    name: "fed_shed_household_finance_survey.csv",
     rows: [
-      { resp_id: "PANEL-01", cohort: "Gen Z (18-24)", monthly_fomo_spend: 185, primary_channel: "TikTok", purchased_dupe: "Yes", resale_paid_markup_pct: 35 },
-      { resp_id: "PANEL-02", cohort: "Gen Z (25-27)", monthly_fomo_spend: 240, primary_channel: "Instagram", purchased_dupe: "Yes", resale_paid_markup_pct: 50 },
-      { resp_id: "PANEL-03", cohort: "Millennial", monthly_fomo_spend: 140, primary_channel: "Instagram", purchased_dupe: "No", resale_paid_markup_pct: 20 },
-      { resp_id: "PANEL-04", cohort: "Gen Z (18-24)", monthly_fomo_spend: 310, primary_channel: "TikTok", purchased_dupe: "Yes", resale_paid_markup_pct: 80 },
-      { resp_id: "PANEL-05", cohort: "Millennial", monthly_fomo_spend: 95, primary_channel: "YouTube", purchased_dupe: "No", resale_paid_markup_pct: 0 },
-      { resp_id: "PANEL-06", cohort: "Gen Z (25-27)", monthly_fomo_spend: 215, primary_channel: "Instagram", purchased_dupe: "Yes", resale_paid_markup_pct: 45 },
+      { respondent_id: "SHED-00102", age_group: "25-34", income_bracket: "$50K-$74K", emergency_400_cash: "Yes", credit_card_debt: "No", student_loan: "Yes", retirement_savings_adequate: "Somewhat", financial_wellbeing_score: 68, employment_status: "Employed Full-Time" },
+      { respondent_id: "SHED-00145", age_group: "18-24", income_bracket: "Under $25K", emergency_400_cash: "No", credit_card_debt: "Yes", student_loan: "Yes", retirement_savings_adequate: "Not on track", financial_wellbeing_score: 42, employment_status: "Student/Part-Time" },
+      { respondent_id: "SHED-00219", age_group: "35-44", income_bracket: "$100K-$149K", emergency_400_cash: "Yes", credit_card_debt: "No", student_loan: "No", retirement_savings_adequate: "On track", financial_wellbeing_score: 81, employment_status: "Employed Full-Time" },
+      { respondent_id: "SHED-00304", age_group: "45-54", income_bracket: "$75K-$99K", emergency_400_cash: "Yes", credit_card_debt: "Yes", student_loan: "No", retirement_savings_adequate: "Somewhat", financial_wellbeing_score: 64, employment_status: "Employed Full-Time" },
+      { respondent_id: "SHED-00412", age_group: "55-64", income_bracket: "$100K-$149K", emergency_400_cash: "Yes", credit_card_debt: "No", student_loan: "No", retirement_savings_adequate: "On track", financial_wellbeing_score: 86, employment_status: "Employed Full-Time" },
+      { respondent_id: "SHED-00523", age_group: "25-34", income_bracket: "$35K-$49K", emergency_400_cash: "No", credit_card_debt: "Yes", student_loan: "Yes", retirement_savings_adequate: "Not on track", financial_wellbeing_score: 49, employment_status: "Self-Employed" },
+      { respondent_id: "SHED-00631", age_group: "65+", income_bracket: "$50K-$74K", emergency_400_cash: "Yes", credit_card_debt: "No", student_loan: "No", retirement_savings_adequate: "On track", financial_wellbeing_score: 79, employment_status: "Retired" },
+      { respondent_id: "SHED-00789", age_group: "18-24", income_bracket: "$25K-$34K", emergency_400_cash: "No", credit_card_debt: "No", student_loan: "Yes", retirement_savings_adequate: "Not on track", financial_wellbeing_score: 53, employment_status: "Employed Full-Time" },
     ],
   },
 };
@@ -217,16 +221,16 @@ export default function CompanyData({ onNavigate }) {
 
       {/* Instant Demo Dataset Quick Loaders */}
       <div className="demo-datasets-bar">
-        <span className="demo-label">⚡ Don't have a CSV handy? Try one of these instant demo datasets:</span>
+        <span className="demo-label">⚡ Don't have a CSV handy? Try one of these authentic datasets:</span>
         <div className="demo-chips">
           <button className="demo-chip-btn" onClick={() => loadDemo("ecommerce")}>
-            🛒 Omnichannel E-Commerce (1,240 Orders)
+            🛒 UCI Online Retail (541K Transactions)
           </button>
           <button className="demo-chip-btn" onClick={() => loadDemo("saas")}>
-            📊 B2B SaaS ARR & Churn (520 Accounts)
+            📊 SaaS Industry Benchmarks (Baremetrics)
           </button>
           <button className="demo-chip-btn" onClick={() => loadDemo("survey")}>
-            🔥 GenZ Social FOMO Study (850 Respondents)
+            🏦 Fed SHED Household Finance (12K Survey)
           </button>
         </div>
       </div>
