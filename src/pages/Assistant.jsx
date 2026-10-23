@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
+  Activity,
   AlertCircle,
   Bot,
   Check,
@@ -10,10 +11,8 @@ import {
   RotateCcw,
   Send,
   SlidersHorizontal,
-  Sparkles,
   UserRound,
   X,
-  Zap,
 } from "lucide-react";
 import MarkdownRenderer from "../components/MarkdownRenderer.jsx";
 import { consumerInsights, numeratorSource } from "../data/consumerInsights.js";
@@ -111,12 +110,12 @@ export default function Assistant({ initialQuery = "", contextData = null }) {
       });
 
       const result = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(result.error || "Trender AI could not complete this analysis.");
+      if (!response.ok) throw new Error(result.error || "The analysis could not be completed.");
       if (typeof result.text !== "string" || !result.text.trim()) {
-        throw new Error("Trender AI returned an empty response. Please try again.");
+        throw new Error("The response was empty. Please try again.");
       }
 
-      const modelLabel = result.model || "Trender Intelligence";
+      const modelLabel = result.model || "Research assistant";
       setActiveModelName(modelLabel);
 
       setMessages(prev => [
@@ -133,7 +132,7 @@ export default function Assistant({ initialQuery = "", contextData = null }) {
         ...prev,
         {
           role: "system",
-          content: error.message || "Unable to reach Trender AI. Please try again.",
+          content: error.message || "Could not reach the selected provider. Please try again.",
           id: `${Date.now()}-error`,
         },
       ]);
@@ -155,11 +154,11 @@ export default function Assistant({ initialQuery = "", contextData = null }) {
   function exportChat() {
     if (!messages.length) return;
     const content = [
-      `# Trender Intelligence Research Session`,
+      `# Research session`,
       `Date: ${new Date().toLocaleString()}`,
       `Active Model: ${activeModelName || "Trender Multi-Provider Engine"}`,
       `\n---\n`,
-      ...messages.map(m => `### ${m.role === "assistant" ? "Trender Intelligence" : m.role === "user" ? "User" : "System"}\n\n${m.content}\n`),
+      ...messages.map(m => `### ${m.role === "assistant" ? "Research assistant" : m.role === "user" ? "User" : "System"}\n\n${m.content}\n`),
     ].join("\n");
 
     const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
@@ -182,12 +181,12 @@ export default function Assistant({ initialQuery = "", contextData = null }) {
     <div className="assistant-page">
       <div className="assistant-header">
         <div className="assistant-symbol">
-          <Sparkles size={23} />
+          <Activity size={22} />
         </div>
         <div className="assistant-heading-copy">
-          <div className="eyebrow">INTELLIGENT MARKET RESEARCH ENGINE</div>
-          <h1>Trender Intelligence</h1>
-          <p>Multi-provider AI reasoning grounded in live public market data, macroeconomic indicators, and consumer reports.</p>
+          <div className="eyebrow">RESEARCH ASSISTANT</div>
+          <h1>Research assistant</h1>
+          <p>Ask questions about market data and published research. Responses identify the provider and available sources.</p>
         </div>
 
         <div className="assistant-controls-cluster">
@@ -197,9 +196,9 @@ export default function Assistant({ initialQuery = "", contextData = null }) {
               value={provider}
               onChange={e => setProvider(e.target.value)}
               className="provider-dropdown"
-              title="Select AI Reasoning Engine"
+              title="Select provider"
             >
-              <option value="auto">Auto (Smart Engine)</option>
+              <option value="auto">Automatic</option>
               <option value="gemini">Google Gemini</option>
               <option value="openrouter">OpenRouter Free</option>
               <option value="openai">OpenAI</option>
@@ -210,10 +209,10 @@ export default function Assistant({ initialQuery = "", contextData = null }) {
           <button
             className={`small-action keys-button ${hasConfiguredKeys ? "has-keys" : ""}`}
             onClick={() => setKeysModalOpen(true)}
-            title="Configure Custom AI Keys"
+            title="Configure provider keys"
           >
             <Key size={14} />
-            <span>{hasConfiguredKeys ? "Keys Active" : "Set API Key"}</span>
+            <span>{hasConfiguredKeys ? "Key saved" : "Set provider key"}</span>
           </button>
 
           {messages.length > 0 && (
@@ -227,9 +226,9 @@ export default function Assistant({ initialQuery = "", contextData = null }) {
                   setMessages([]);
                   setActiveModelName("");
                 }}
-                title="Start a new chat session"
+                title="Start a new research session"
               >
-                <RotateCcw size={14} /> New Chat
+                <RotateCcw size={14} /> New session
               </button>
             </>
           )}
@@ -240,9 +239,9 @@ export default function Assistant({ initialQuery = "", contextData = null }) {
         {messages.length === 0 ? (
           <div className="assistant-welcome">
             <div className="sparkle-circle">
-              <Zap size={24} />
+              <Activity size={22} />
             </div>
-            <span className="assistant-welcome-kicker">GROUNDED MARKET REASONING</span>
+            <span className="assistant-welcome-kicker">MARKET RESEARCH ASSISTANT</span>
             <h2>What market signal would you like to investigate?</h2>
             <p>
               Ask about current benchmark moves, industry sector rotations, macroeconomic divergences, or 2025 consumer demand findings.
@@ -267,7 +266,7 @@ export default function Assistant({ initialQuery = "", contextData = null }) {
                 <div className="assistant-error" role="alert" key={message.id}>
                   <AlertCircle size={17} />
                   <div>
-                    <strong>AI Notice</strong>
+                    <strong>Request notice</strong>
                     <p>{message.content}</p>
                   </div>
                 </div>
@@ -279,7 +278,7 @@ export default function Assistant({ initialQuery = "", contextData = null }) {
                   <div className="message-body">
                     <div className="message-meta">
                       <span className="message-role">
-                        {message.role === "assistant" ? "Trender Intelligence" : "You"}
+                        {message.role === "assistant" ? "Research assistant" : "You"}
                       </span>
                       {message.source && <span className="message-source">{message.source}</span>}
                     </div>
@@ -306,7 +305,7 @@ export default function Assistant({ initialQuery = "", contextData = null }) {
                   <i />
                   <i />
                 </span>
-                Synthesizing market snapshot and generating grounded intelligence…
+                Reviewing the selected sources…
               </div>
             )}
           </div>
@@ -323,7 +322,7 @@ export default function Assistant({ initialQuery = "", contextData = null }) {
             value={input}
             onChange={event => setInput(event.target.value)}
             placeholder="Ask about indices, sector ETFs, macroeconomic inflation, or upload company data to compare…"
-            aria-label="Message Trender Intelligence"
+            aria-label="Message Research assistant"
             rows={2}
             maxLength={8000}
             onKeyDown={event => {
@@ -335,12 +334,12 @@ export default function Assistant({ initialQuery = "", contextData = null }) {
           />
           <div className="composer-footer">
             <span className="engine-status-tag">
-              <Sparkles size={13} />
+              <Activity size={13} />
               {activeModelName
-                ? `Engine: ${activeModelName}`
+                ? `Provider: ${activeModelName}`
                 : hasConfiguredKeys
-                ? "Custom Key Configured · Multi-Model Active"
-                : "Smart Grounded Engine · Zero-Config Ready"}
+                ? "Provider key saved"
+                : "Source-based mode · no key required"}
             </span>
             <span className="composer-count">{input.length}/8000</span>
             <button className="primary-button" type="submit" disabled={!input.trim() || loading}>
@@ -351,17 +350,17 @@ export default function Assistant({ initialQuery = "", contextData = null }) {
       </div>
 
       <p className="data-disclaimer">
-        AI responses are grounded in current public market snapshots, ECB reference rates, and World Bank annual data. Verify high-stakes decisions against direct primary sources.
+        Responses are generated by the selected provider using the available market snapshot and published data. Check linked sources before relying on an interpretation.
       </p>
 
       {/* Custom API Keys Modal */}
       {keysModalOpen && (
         <div className="command-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setKeysModalOpen(false); }}>
-          <section className="command-dialog keys-dialog" role="dialog" aria-modal="true" aria-label="AI Provider Settings">
+          <section className="command-dialog keys-dialog" role="dialog" aria-modal="true" aria-label="Provider settings">
             <div className="keys-dialog-header">
               <div className="keys-dialog-title">
                 <Key size={18} />
-                <strong>Configure AI Reasoning Keys</strong>
+                <strong>Provider keys</strong>
               </div>
               <button className="icon-button" onClick={() => setKeysModalOpen(false)} aria-label="Close modal">
                 <X size={18} />

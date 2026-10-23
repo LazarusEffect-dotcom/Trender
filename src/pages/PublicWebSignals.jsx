@@ -116,7 +116,7 @@ export default function PublicWebSignals() {
       </div>
       <div className="heading-actions">
         <button className="primary-button" onClick={synthesizeWithAi} disabled={aiLoading || (!visible.length && !currentTrends?.items?.length)}>
-          <Sparkles size={15} /> {aiLoading ? "Synthesizing…" : "Synthesize with AI"}
+          <Sparkles size={15} /> {aiLoading ? "Preparing summary…" : "Create summary"}
         </button>
         <button className="small-action" onClick={() => { load(true); loadTrends(trendRegion, true); }} disabled={loading || trendLoading}>
           <RefreshCw size={15} className={loading || trendLoading ? "spin-icon" : ""}/>{loading || trendLoading ? "Refreshing…" : "Refresh signals"}
@@ -130,7 +130,7 @@ export default function PublicWebSignals() {
         <div className="ai-dataset-header">
           <div className="ai-dataset-title">
             <Sparkles size={18} />
-            <strong>AI Web Signal Synthesis</strong>
+            <strong>Signal summary</strong>
           </div>
           <button className="icon-button" onClick={() => setAiSynthesis("")} aria-label="Close AI synthesis">
             <X size={16} />

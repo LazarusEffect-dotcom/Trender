@@ -8,10 +8,8 @@ import {
   Flame,
   Globe2,
   RefreshCw,
-  Sparkles,
   TrendingUp,
   WalletCards,
-  Zap,
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import MetricCard from "../components/MetricCard.jsx";
@@ -34,13 +32,12 @@ function move(value) {
   return Number.isFinite(Number(value)) ? `${Number(value) > 0 ? "+" : ""}${Number(value).toFixed(2)}%` : "Latest public quote";
 }
 
-export default function Overview({ onNavigate, onAskAi, genzMode = false }) {
+export default function Overview({ onNavigate, onAskAi }) {
   const [market, setMarket] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [refreshedAt, setRefreshedAt] = useState("");
   const [selectedAsset, setSelectedAsset] = useState("^GSPC");
-  const [selectedTimeframe, setSelectedTimeframe] = useState("1M");
 
   const refresh = async () => {
     setLoading(true); setError("");
@@ -72,78 +69,49 @@ export default function Overview({ onNavigate, onAskAi, genzMode = false }) {
 
   const topFomo = useMemo(() => FOMO_PRODUCTS[0], []);
 
-  const aiPulseSummary = useMemo(() => {
-    if (!market) return "Loading current market quotes to synthesize today's market pulse briefing…";
-    const spMove = Number(sp500?.changePercent) || 0;
-    const btcMove = Number(bitcoin?.changePercent) || 0;
-    const sectorTxt = topSector ? ` leading sector ${topSector.name} is ${topSector.changePercent >= 0 ? "+" : ""}${Number(topSector.changePercent).toFixed(2)}%` : "";
+  const marketNote = useMemo(() => {
+    if (!market) return "Waiting for the latest market snapshot.";
+    const facts = [];
+    if (sp500) facts.push("S&P 500 " + move(sp500.changePercent));
+    if (bitcoin) facts.push("Bitcoin " + move(bitcoin.changePercent));
+    if (topSector) facts.push(topSector.name + " " + move(topSector.changePercent));
+    if (euro?.rate) facts.push("USD/EUR " + Number(euro.rate).toFixed(4));
+    return facts.length ? facts.join(" · ") : "No current quotes are available.";
+  }, [market, sp500, bitcoin, euro, topSector]);
 
-    if (genzMode) {
-      const sentiment = spMove >= 0 ? "Stonks are officially cooking today, zero cap! 🚀" : "Market is catching a slight vibe check today 📉";
-      return `${sentiment} S&P 500 is chilling at ${indexPoints(sp500?.price)} pts (${move(sp500?.changePercent)}), tech giants on Nasdaq are flexing, Bitcoin is holding the line at ${currency(bitcoin?.price, "USD")} (${move(bitcoin?.changePercent)}), and consumer FOMO drops (like Owala and Labubu) are printing wild secondary markups.`;
-    }
-
-    return `Equities show ${spMove >= 0 ? "positive breadth" : "defensive positioning"} with S&P 500 at ${indexPoints(sp500?.price)} pts (${move(sp500?.changePercent)}). Bitcoin trades at ${currency(bitcoin?.price, "USD")} (${move(bitcoin?.changePercent)}),${sectorTxt}, and USD/EUR reference is ${euro?.rate ? Number(euro.rate).toFixed(4) : "stable"}.`;
-  }, [market, sp500, bitcoin, euro, topSector, genzMode]);
-
-  // Dynamic Chart Resolution based on selectedAsset and selectedTimeframe
   const currentAssetObj = useMemo(() => {
-    if (selectedAsset === "^GSPC") return sp500 || { name: "S&P 500", symbol: "^GSPC", price: 5800 };
-    if (selectedAsset === "^IXIC") return nasdaq || { name: "Nasdaq Composite", symbol: "^IXIC", price: 18200 };
-    if (selectedAsset === "BTC") return bitcoin || { name: "Bitcoin", symbol: "BTC", price: 68000 };
-    return market?.indices?.find(i => i.symbol === selectedAsset) || sp500;
-  }, [selectedAsset, sp500, nasdaq, bitcoin, market]);
+    if (selectedAsset === "BTC") return bitcoin;
+    return market?.indices?.find(item => item.symbol === selectedAsset);
+  }, [selectedAsset, bitcoin, market]);
 
-  const activeChartRows = useMemo(() => {
-    const rawHistory = currentAssetObj?.history || sp500?.history || [];
-    let base = rawHistory.length ? [...rawHistory] : [
-      { date: "Oct 1", value: 5750 },
-      { date: "Oct 5", value: 5780 },
-      { date: "Oct 10", value: 5740 },
-      { date: "Oct 14", value: 5810 },
-      { date: "Oct 18", value: 5860 },
-    ];
-
-    // Adjust values if asset is not S&P but shares base shape
-    if (selectedAsset === "^IXIC" && !currentAssetObj?.history) {
-      base = base.map(pt => ({ ...pt, value: Math.round(pt.value * 3.12) }));
-    } else if (selectedAsset === "BTC" && !currentAssetObj?.history) {
-      base = base.map(pt => ({ ...pt, value: Math.round(pt.value * 11.8) }));
-    }
-
-    if (selectedTimeframe === "1D") return base.slice(-2);
-    if (selectedTimeframe === "5D") return base.slice(-5);
-    if (selectedTimeframe === "1M") return base.slice(-15);
-    return base;
-  }, [currentAssetObj, sp500, selectedAsset, selectedTimeframe]);
-
+  const activeChartRows = useMemo(() => (currentAssetObj?.history || []).filter(point => Number.isFinite(Number(point.value))), [currentAssetObj]);
   const cards = [
     {
-      label: genzMode ? "S&P 500 (The Big 500 Stonks)" : "S&P 500",
+      label: "S&P 500",
       value: indexPoints(sp500?.price),
       change: move(sp500?.changePercent),
-      note: genzMode ? "The ultimate market vibe check" : "Index points · latest quote",
+      note: "Index points · latest quote",
       icon: Globe2,
     },
     {
-      label: genzMode ? "Nasdaq (Tech Squad & NVDA)" : "Nasdaq Composite",
+      label: "Nasdaq Composite",
       value: indexPoints(nasdaq?.price),
       change: move(nasdaq?.changePercent),
-      note: genzMode ? "Silicon Valley hype carrier" : "Index points · latest quote",
+      note: "Index points · latest quote",
       icon: Activity,
     },
     {
-      label: genzMode ? "Bitcoin (Crypto Rollercoaster)" : "Bitcoin",
+      label: "Bitcoin",
       value: currency(bitcoin?.price, bitcoin?.currency || "USD"),
       change: move(bitcoin?.changePercent),
-      note: genzMode ? "Digital gold or pure adrenaline" : "Binance spot · USDT quote",
+      note: "Binance spot · USDT quote",
       icon: WalletCards,
     },
     {
-      label: genzMode ? "USD / EUR (Currency Flex)" : "USD / EUR",
+      label: "USD / EUR",
       value: euro?.rate ? Number(euro.rate).toFixed(4) : "—",
       change: euro?.date || "ECB reference rate",
-      note: genzMode ? "Dollar power vs European Euro" : "Units per US dollar",
+      note: "Units per US dollar",
       icon: TrendingUp,
     },
   ];
@@ -152,24 +120,17 @@ export default function Overview({ onNavigate, onAskAi, genzMode = false }) {
     <div className="page-content">
       <div className="page-heading">
         <div>
-          <div className="eyebrow">
-            <span className="live-dot" /> GLOBAL MARKET PULSE
-            {genzMode && <span className="genz-eyebrow-pill">⚡ GenZ Mode Active</span>}
-          </div>
-          <h1>{genzMode ? "Markets, decoded with zero boomer fluff." : "Markets, with the sources attached."}</h1>
-          <p>
-            {genzMode
-              ? "Live market quotes, crypto moves, viral Instagram FOMO drops, and 55K+ real respondent surveys."
-              : "Public quotes, exchange rates, published consumer research, and viral trend signals in one view."}
-          </p>
+          <div className="eyebrow"><span className="live-dot"/> MARKET OVERVIEW</div>
+          <h1>Markets at a glance</h1>
+          <p>Indexes, currencies, commodities, and published consumer research.</p>
           <small className="freshness-note">
-            {refreshedAt ? `Snapshot retrieved ${new Date(refreshedAt).toLocaleString()}` : "Use each source link to review its timing and methodology."}
+            {refreshedAt ? `Updated ${new Date(refreshedAt).toLocaleString()}` : "Source and quote time are shown with each dataset."}
           </small>
         </div>
         <div className="heading-actions">
           <button className="small-action" onClick={refresh} disabled={loading}>
             <RefreshCw size={14} className={loading ? "spin-icon" : ""} />
-            {loading ? "Refreshing…" : "Refresh"}
+            {loading ? "Refreshing…" : "Refresh data"}
           </button>
           <button className="primary-button" onClick={() => onNavigate("Reports & Exports")}>
             Build report <ArrowUpRight size={16} />
@@ -185,33 +146,12 @@ export default function Overview({ onNavigate, onAskAi, genzMode = false }) {
         </div>
       )}
 
-      {/* AI Executive Market Briefing Banner */}
-      <div className={`ai-pulse-banner ${genzMode ? "genz-ai-banner" : ""}`}>
-        <div className="ai-pulse-left">
-          <div className="ai-pulse-icon">
-            <Sparkles size={20} />
-          </div>
-          <div className="ai-pulse-copy">
-            <span className="ai-pulse-tag">
-              <Sparkles size={11} /> {genzMode ? "Trender AI · GenZ Vibe Radar" : "Trender AI Market Pulse"}
-            </span>
-            <p className="ai-pulse-text">{aiPulseSummary}</p>
-          </div>
-        </div>
-        <div className="ai-pulse-actions">
-          <button
-            className="primary-button"
-            onClick={() =>
-              onAskAi
-                ? onAskAi("Give me a comprehensive multi-asset breakdown of today's market momentum, tech earnings impact, and macro sentiment.")
-                : onNavigate("AI Assistant")
-            }
-          >
-            Analyze with AI <ArrowUpRight size={14} />
-          </button>
-        </div>
-      </div>
-
+      <section className="market-note-banner">
+        <div><span className="market-note-label">LATEST SNAPSHOT</span><p>{marketNote}</p></div>
+        <button className="small-action" onClick={() => onAskAi ? onAskAi("Review the current market snapshot. Separate reported data from interpretation and cite sources where available.") : onNavigate("Research assistant")}>
+          <ArrowUpRight size={14}/> Ask research assistant
+        </button>
+      </section>
       {/* Metric Cards Row */}
       <div className="metric-grid">
         {cards.map(card => (
@@ -229,21 +169,18 @@ export default function Overview({ onNavigate, onAskAi, genzMode = false }) {
       {/* Viral FOMO Drop Spotlight Card */}
       <div className="viral-spotlight-card">
         <div className="viral-spotlight-left">
-          <div className="viral-spotlight-badge">
-            <Flame size={16} /> VIRAL & FOMO RADAR
-          </div>
+          <div className="viral-spotlight-badge"><Flame size={15}/> CONSUMER ATTENTION</div>
           <div className="viral-spotlight-details">
             <h3>{topFomo.name}</h3>
             <p>
-              Viral on {topFomo.primaryPlatform} ({topFomo.views}) · Reselling at{" "}
-              <strong>{topFomo.resalePrice}</strong> vs <span>{topFomo.retailPrice}</span> ({topFomo.resaleMarkup} markup)
+              Trending on {topFomo.primaryPlatform} ({topFomo.views}) · Resale price
+              <strong>{topFomo.resalePrice}</strong> vs <span>{topFomo.retailPrice}</span> retail
             </p>
           </div>
         </div>
         <div className="viral-spotlight-actions">
-          <span className="fomo-score-chip">🔥 FOMO Score: {topFomo.fomoScore}/100</span>
-          <button className="primary-button" onClick={() => onNavigate("Viral & FOMO Trends")}>
-            Explore Viral Trends <ArrowRight size={14} />
+          <button className="primary-button" onClick={() => onNavigate("Consumer attention")}>
+            View consumer trends <ArrowRight size={14} />
           </button>
         </div>
       </div>
@@ -251,14 +188,14 @@ export default function Overview({ onNavigate, onAskAi, genzMode = false }) {
       {/* Multi-Asset & Timeframe Interactive Chart */}
       <div className="dashboard-grid primary-grid">
         <ChartCard
-          title={`${currentAssetObj.name || "Asset"} · Interactive Trajectory`}
+          title={`${currentAssetObj?.name || "Market history"} · Recent closes`}
           subtitle={
             currentAssetObj?.asOf
-              ? `Public quote · latest session ${new Date(currentAssetObj.asOf).toLocaleString()}`
-              : "Recent daily observations from public market feeds"
+              ? `Latest quote ${new Date(currentAssetObj.asOf).toLocaleString()} · recent daily closes`
+              : "Recent daily closing prices from the selected public feed"
           }
           exportRows={activeChartRows}
-          filename={`${selectedAsset.toLowerCase()}-sessions`}
+          filename={`${selectedAsset.toLowerCase()}-recent-closes`}
         >
           {/* Chart Header Controls: Asset Tabs & Timeframe Buttons */}
           <div className="chart-interactive-controls">
@@ -283,23 +220,13 @@ export default function Overview({ onNavigate, onAskAi, genzMode = false }) {
               </button>
             </div>
 
-            <div className="timeframe-btn-group">
-              {["1D", "5D", "1M", "6M", "1Y"].map(tf => (
-                <button
-                  key={tf}
-                  className={`timeframe-btn ${selectedTimeframe === tf ? "active" : ""}`}
-                  onClick={() => setSelectedTimeframe(tf)}
-                >
-                  {tf}
-                </button>
-              ))}
-            </div>
+
           </div>
 
           <div className="chart-legend">
             <span>
               <i className="legend-blue" />
-              {currentAssetObj.name} Closing Level
+              {currentAssetObj?.name || "Selected market"} · daily close
             </span>
             <a
               className="source-link"
@@ -320,8 +247,8 @@ export default function Overview({ onNavigate, onAskAi, genzMode = false }) {
               <AreaChart data={activeChartRows} margin={{ top: 10, right: 8, left: -18, bottom: 0 }}>
                 <defs>
                   <linearGradient id="globalFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#5267e8" stopOpacity={0.18} />
-                    <stop offset="100%" stopColor="#5267e8" stopOpacity={0} />
+                    <stop offset="0%" stopColor="#17654f" stopOpacity={0.18} />
+                    <stop offset="100%" stopColor="#17654f" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid stroke="#edf0f5" vertical={false} />
@@ -336,15 +263,15 @@ export default function Overview({ onNavigate, onAskAi, genzMode = false }) {
                 <Area
                   type="monotone"
                   dataKey="value"
-                  name={currentAssetObj.name}
-                  stroke="#5267e8"
+                  name={currentAssetObj?.name || "Selected market"}
+                  stroke="#17654f"
                   strokeWidth={2.5}
                   fill="url(#globalFill)"
                 />
               </AreaChart>
             </ResponsiveContainer>
           ) : (
-            <div className="live-state">A recent price history was not returned. Open Global Markets for the latest index quote.</div>
+            <div className="live-state">Price history is not available for this selection yet. The latest quote remains available in Global Markets.</div>
           )}
         </ChartCard>
 

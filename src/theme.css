@@ -213,3 +213,70 @@ th, td { padding: 13px 14px; }
   .assistant-status { margin-left: 59px; }
   .command-footer { justify-content: center; gap: 10px; }
 }
+
+
+/* Trender editorial research desk */
+:root { font-family: "DM Sans", Inter, ui-sans-serif, system-ui, sans-serif; color: #202a2d; background: #f4f5f1; --brand: #17654f; --brand-dark: #104b3b; --ink: #202a2d; --muted: #707c79; --line: #dfe4de; --surface: #fff; --green: #217452; }
+body, .main-shell { background: #f4f5f1; color: #202a2d; }
+.main-shell { background: #f4f5f1; }
+.sidebar { background: #fff; color: #27312f; border-right: 1px solid #e2e6e0; box-shadow: none; }
+.sidebar::after { display: none; }
+.brand-mark { background: #17654f; border-radius: 8px; box-shadow: none; }
+.brand-name { color: #202a2d; }
+.brand-name span { color: #b27637; }
+.brand-name small { color: #87918b; }
+.workspace-label, .sidebar-bottom > p { color: #929c95; }
+.nav-item { color: #65716b; border-radius: 7px; }
+.nav-item svg { color: #8a958f; }
+.nav-item:hover { color: #22322c; background: #f5f7f3; }
+.nav-item.active { color: #145a45; background: #edf4ef; box-shadow: inset 2px 0 #17654f; }
+.nav-item.active svg { color: #17654f; }
+.nav-pill { color: #17654f; background: #e6f0e9; }
+.plan-card { border-color: #e4e8e3; background: #f8f9f6; }
+.plan-card strong { color: #394640; }
+.plan-card small { color: #808b84; }
+.topbar { background: #fbfcf9; border-color: #e2e6e0; box-shadow: none; }
+.breadcrumbs { color: #8a958e; }
+.breadcrumbs strong { color: #293531; }
+.global-search { background: #f6f8f4; border-color: #e1e6df; border-radius: 7px; }
+.global-search:hover { color: #145a45; border-color: #aebeb2; background: #fff; }
+.page-content { padding-top: 32px; }
+.page-heading h1, .assistant-header h1 { color: #1f2c28; font-family: Georgia, "Times New Roman", serif; font-weight: 500; letter-spacing: -.55px; }
+.page-heading p, .assistant-header p { color: #737e78; }
+.eyebrow { color: #6c8074; letter-spacing: 1.25px; }
+.metric-card, .panel, .feature-card, .live-card, .panel.live-panel, .export-panel { border-color: #e0e5df; border-radius: 9px; box-shadow: 0 1px 2px #17251b08; }
+.metric-card, .panel, .live-card { background: #fff; }
+.metric-card:hover, .feature-card:hover { transform: none; box-shadow: 0 3px 10px #17251b0b; }
+.metric-icon, .feature-icon { color: #17654f; background: #edf4ef; border-radius: 7px; }
+.metric-value, .live-value { color: #1f2c28; }
+.primary-button { border-color: #17654f; border-radius: 7px; background: #17654f; box-shadow: none; }
+.primary-button:hover { background: #104b3b; box-shadow: none; }
+.small-action { border-radius: 7px; }
+.small-action:hover { border-color: #b7c9bd; color: #104b3b; background: #f4f8f4; }
+.feature-footer svg, .text-action, .source-link { color: #17654f; }
+.asset-toggle-btn.active, .timeframe-btn.active { color: #145a45; background: #e8f1eb; }
+.legend-blue { background: #17654f; }
+.market-note-banner { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin: -8px 0 17px; padding: 16px 18px; border: 1px solid #dfe6dd; border-left: 3px solid #17654f; border-radius: 7px; background: #fff; }
+.market-note-banner > div { min-width: 0; }
+.market-note-label { color: #738078; font-size: 9px; font-weight: 700; letter-spacing: 1.25px; }
+.market-note-banner p { margin: 7px 0 0; color: #26342e; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.market-note-banner .small-action { flex-shrink: 0; }
+.viral-spotlight-card { border-color: #e0e5df; border-radius: 9px; background: #fff; box-shadow: 0 1px 2px #17251b08; }
+.viral-spotlight-badge { color: #6e7d73; }
+.freshness-note, .report-footnote { color: #77837b; }
+.chat-workspace, .assistant-symbol, .message-avatar.ai-avatar { border-radius: 9px; box-shadow: none; }
+.assistant-symbol, .message-avatar.ai-avatar { background: #17654f; }
+.sparkle-circle { color: #17654f; background: #edf4ef; border-color: #dfe9e1; }
+.assistant-welcome-kicker { color: #587363; }
+.assistant-status { letter-spacing: .35px; }
+.command-result:hover, .command-result.current { color: #174b39; background: #edf4ef; }
+.command-result-icon { color: #17654f; border-color: #e0e9e1; background: #f8faf7; }
+.command-result-arrow { color: #6d8877; }
+@media (max-width: 760px) { .market-note-banner { align-items: flex-start; flex-direction: column; } }
+html[data-trender-theme="dark"] .sidebar { background: #10182a; border-color: #27324a; }
+html[data-trender-theme="dark"] .brand-name { color: #f0f4fa; }
+html[data-trender-theme="dark"] .nav-item.active { color: #d9eee2; background: #173126; box-shadow: inset 2px 0 #5b9a77; }
+html[data-trender-theme="dark"] .market-note-banner { background: #121a2b; border-color: #273a30; border-left-color: #5b9a77; }
+html[data-trender-theme="dark"] .market-note-banner p { color: #e1ebe4; }
+
+@media (max-width: 760px) { .topbar-research span { display: none; } .topbar-research { width: 34px; min-width: 34px; padding: 0; justify-content: center; } .workspace-profile-btn .profile-name, .workspace-profile-btn > svg { display: none; } .workspace-profile-btn { padding: 0; } }

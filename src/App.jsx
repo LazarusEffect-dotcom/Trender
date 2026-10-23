@@ -9,22 +9,21 @@ const CompanyData = lazy(() => import("./pages/CompanyData.jsx"));
 const Assistant = lazy(() => import("./pages/Assistant.jsx"));
 const PublicWebSignals = lazy(() => import("./pages/PublicWebSignals.jsx"));
 const ViralTrends = lazy(() => import("./pages/ViralTrends.jsx"));
-import GenzLingoModal from "./components/GenzLingoModal.jsx";
 
 const destinations = [
-  { name: "Overview", detail: "Your market at a glance", terms: "home dashboard pulse" },
-  { name: "Global Markets", detail: "Macro signals and market movement", terms: "global macro economy fx currencies commodities" },
+  { name: "Overview", detail: "Market data, all in one view", terms: "home dashboard pulse" },
+  { name: "Global Markets", detail: "Indexes, currencies, sectors, and commodities", terms: "global macro economy fx currencies commodities" },
   { name: "Commodities", detail: "Gold, silver, copper, crude oil, and energy futures", terms: "gold silver copper oil energy natural gas gasoline heating oil futures" },
-  { name: "Consumer Trends", detail: "Category growth and 55K+ respondent survey signals", terms: "consumer products demand trends survey demographic omnibus" },
-  { name: "Viral & FOMO Trends", detail: "Instagram & TikTok hype, resale markups, and viral drops", terms: "viral fomo instagram tiktok aesthetic resale owala stanley labubu rhode hype drops" },
+  { name: "Consumer Trends", detail: "Category growth and published survey findings", terms: "consumer products demand trends survey demographic omnibus" },
+  { name: "Consumer attention", detail: "Social attention, product launches, and resale activity", terms: "viral fomo instagram tiktok resale products launches trends" },
   { name: "Industries", detail: "Industry momentum and comparisons", terms: "industry sector technology retail automotive" },
-  { name: "Geographic Intelligence", detail: "Compare regions and opportunities", terms: "geography region country location" },
-  { name: "Public Web Signals", detail: "Explore open web activity and hosting platforms", terms: "public web signals hosting cms hubspot wix wordpress webflow" },
-  { name: "Company Data", detail: "Explore your own data privately", terms: "upload csv excel company private demo datasets" },
-  { name: "AI Assistant", detail: "Ask Trender Intelligence", terms: "ai ask assistant copilot research" },
-  { name: "Reports & Exports", detail: "Build and export reports", terms: "report csv download export" },
-  { name: "Watchlists & Alerts", detail: "Follow the signals that matter", terms: "watchlist alerts save monitor" },
-  { name: "Settings", detail: "Workspace and data preferences", terms: "settings preferences configuration" },
+  { name: "Geographic Intelligence", detail: "Compare country-level economic indicators", terms: "geography region country location" },
+  { name: "Public Web Signals", detail: "Search activity, developer projects, and web publishing", terms: "public web signals hosting cms hubspot wix wordpress webflow" },
+  { name: "Company Data", detail: "Analyze a spreadsheet in your browser", terms: "upload csv excel company private datasets" },
+  { name: "Research assistant", detail: "Ask the research assistant", terms: "ai ask assistant research analysis" },
+  { name: "Reports & Exports", detail: "Download market and research data", terms: "report csv download export" },
+  { name: "Watchlists & Alerts", detail: "Save instruments and set price alerts", terms: "watchlist alerts save monitor" },
+  { name: "Settings", detail: "Appearance, refresh interval, and providers", terms: "settings preferences configuration" },
 ];
 
 export default function App() {
@@ -33,20 +32,7 @@ export default function App() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [assistantQuery, setAssistantQuery] = useState("");
-  const [genzMode, setGenzMode] = useState(() => {
-    try { return localStorage.getItem("trender.genz_mode.v1") === "true"; }
-    catch { return false; }
-  });
-  const [genzModalOpen, setGenzModalOpen] = useState(false);
   const searchInput = useRef(null);
-
-  function toggleGenzMode() {
-    setGenzMode(prev => {
-      const next = !prev;
-      try { localStorage.setItem("trender.genz_mode.v1", String(next)); } catch {}
-      return next;
-    });
-  }
 
   useEffect(() => {
     let settings = {};
@@ -78,7 +64,7 @@ export default function App() {
 
   function askAi(promptText = "") {
     setAssistantQuery(promptText);
-    navigate("AI Assistant");
+    navigate("Research assistant");
   }
 
   useEffect(() => {
@@ -106,39 +92,31 @@ export default function App() {
         active={active}
         onSearch={() => setSearchOpen(true)}
         onHelp={() => askAi("")}
-        onOpenGenzLingo={() => setGenzModalOpen(true)}
-        genzMode={genzMode}
-        onToggleGenzMode={toggleGenzMode}
         onNavigate={navigate}
       />
-      <Suspense fallback={<div className="page-loading" role="status"><span className="loading-orbit"/>Preparing your workspace…</div>}>
-        {active === "Overview" ? <Overview onNavigate={navigate} onAskAi={askAi} genzMode={genzMode}/> :
+      <Suspense fallback={<div className="page-loading" role="status"><span className="loading-orbit"/>Loading market data…</div>}>
+        {active === "Overview" ? <Overview onNavigate={navigate} onAskAi={askAi}/> :
          active === "Company Data" ? <CompanyData onNavigate={navigate} onAskAi={askAi}/> :
-         active === "AI Assistant" ? <Assistant key={assistantQuery} initialQuery={assistantQuery}/> :
+         active === "Research assistant" ? <Assistant key={assistantQuery} initialQuery={assistantQuery}/> :
          active === "Public Web Signals" ? <PublicWebSignals onNavigate={navigate} onAskAi={askAi}/> :
-         active === "Viral & FOMO Trends" ? <ViralTrends onNavigate={navigate} onAskAi={askAi} genzMode={genzMode}/> :
+         active === "Consumer attention" ? <ViralTrends onNavigate={navigate} onAskAi={askAi}/> :
          <GenericPage active={active} onNavigate={navigate} onAskAi={askAi}/>}
       </Suspense>
     </main>
     {searchOpen && <div className="command-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) setSearchOpen(false); }}>
-      <section className="command-dialog" role="dialog" aria-modal="true" aria-label="Search Trender workspace">
+      <section className="command-dialog" role="dialog" aria-modal="true" aria-label="Search market research">
         <div className="command-search-row">
           <Search size={19}/>
-          <input ref={searchInput} value={query} onChange={event => setQuery(event.target.value)} onKeyDown={event => { if (event.key === "Enter" && matches[0]) navigate(matches[0].name); }} placeholder="Search your workspace…" aria-label="Search your workspace"/>
+          <input ref={searchInput} value={query} onChange={event => setQuery(event.target.value)} onKeyDown={event => { if (event.key === "Enter" && matches[0]) navigate(matches[0].name); }} placeholder="Search markets, companies, and reports…" aria-label="Search markets, companies, and research"/>
           <kbd>ESC</kbd>
           <button className="icon-button" onClick={() => setSearchOpen(false)} aria-label="Close search"><X size={18}/></button>
         </div>
         <div className="command-caption">{query ? "MATCHING DESTINATIONS" : "QUICK NAVIGATION"}</div>
         <div className="command-results">{matches.map(item => <button key={item.name} className={`command-result ${active === item.name ? "current" : ""}`} onClick={() => navigate(item.name)}><span className="command-result-icon"><Command size={16}/></span><span className="command-result-copy"><strong>{item.name}</strong><small>{item.detail}</small></span><ArrowUpRight size={16} className="command-result-arrow"/></button>)}
-          {matches.length === 0 && <div className="command-empty">No matches. Try a market, region, report, or workspace page.</div>}
+          {matches.length === 0 && <div className="command-empty">No matches. Try a market, company, region, or report.</div>}
         </div>
         <footer className="command-footer"><span><kbd>↵</kbd> Open destination</span><span><kbd>⌘</kbd> <kbd>K</kbd> Open search</span></footer>
       </section>
     </div>}
-    <GenzLingoModal
-      isOpen={genzModalOpen}
-      onClose={() => setGenzModalOpen(false)}
-      onAskAi={askAi}
-    />
   </div>;
 }

@@ -163,7 +163,7 @@ export default function CompanyData({ onNavigate }) {
         throw new Error(data.error || "Could not generate analysis.");
       }
     } catch (err) {
-      setError(err.message || "AI Analysis unavailable.");
+      setError(err.message || "Analysis unavailable.");
     } finally {
       setAiLoading(false);
     }
@@ -173,7 +173,7 @@ export default function CompanyData({ onNavigate }) {
     <div className="page-content">
       <div className="page-heading">
         <div>
-          <div className="eyebrow">PRIVATE ANALYTICS WORKSPACE</div>
+          <div className="eyebrow">PRIVATE SPREADSHEET ANALYSIS</div>
           <h1>Company data</h1>
           <p>Review internal spreadsheets locally in browser memory and compare alongside macro benchmark context.</p>
         </div>
@@ -224,7 +224,7 @@ export default function CompanyData({ onNavigate }) {
         <span className="demo-label">⚡ Don't have a CSV handy? Try one of these authentic datasets:</span>
         <div className="demo-chips">
           <button className="demo-chip-btn" onClick={() => loadDemo("ecommerce")}>
-            🛒 UCI Online Retail (541K Transactions)
+            UCI Online Retail · 541K transactions
           </button>
           <button className="demo-chip-btn" onClick={() => loadDemo("saas")}>
             📊 SaaS Industry Benchmarks (Baremetrics)
@@ -256,13 +256,13 @@ export default function CompanyData({ onNavigate }) {
               </div>
               <div className="heading-actions">
                 <button className="primary-button" onClick={analyzeWithAi} disabled={aiLoading}>
-                  <Sparkles size={15} /> {aiLoading ? "Analyzing with AI…" : "Analyze with AI"}
+                  <Sparkles size={15} /> {aiLoading ? "Reviewing data…" : "Review with assistant"}
                 </button>
                 <button className="small-action" onClick={() => downloadCsv("trender-upload-preview.csv", dataset.rows)}>
                   <Download size={15} /> Export CSV
                 </button>
                 <button className="small-action" onClick={() => { setDataset(null); setAiReport(null); }}>
-                  <RotateCcw size={14} /> Clear / Load New
+                  <RotateCcw size={14} /> Clear and choose another file
                 </button>
               </div>
             </div>
@@ -307,7 +307,7 @@ export default function CompanyData({ onNavigate }) {
               <div className="ai-dataset-header">
                 <div className="ai-dataset-title">
                   <Sparkles size={18} />
-                  <strong>Trender AI Dataset Intelligence</strong>
+                  <strong>Dataset notes</strong>
                 </div>
                 <button className="small-action" onClick={analyzeWithAi} disabled={aiLoading}>
                   <RotateCcw size={13} /> Re-analyze
