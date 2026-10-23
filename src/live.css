@@ -1207,3 +1207,20 @@ html[data-trender-theme="dark"] .live-panel tbody tr:hover {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Commodity futures workspace */
+.commodity-card-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.commodity-card { min-height: 174px; }
+.commodity-section-label { display: flex; align-items: baseline; gap: 12px; margin: 20px 0 12px; }
+.commodity-section-label h2 { margin: 0; color: #25334d; font-size: 16px; }
+.commodity-section-label span { color: #8791a3; font-size: 11px; }
+.commodity-preview { margin-top: 16px; }
+.commodity-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.commodity-strip article { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 13px; border: 1px solid #edf0f5; border-radius: 11px; }
+.commodity-strip article > div { display: flex; flex-direction: column; gap: 4px; }
+.commodity-strip article strong { color: #33415b; font-size: 12px; }
+.commodity-strip article small { color: #8992a4; font-size: 10px; }
+.commodity-strip article b { color: #1d2d49; font-size: 18px; font-variant-numeric: tabular-nums; }
+.commodity-strip article span { font-size: 11px; }
+@media(max-width:1000px) { .commodity-card-grid, .commodity-strip { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media(max-width:700px) { .commodity-card-grid, .commodity-strip { grid-template-columns: 1fr; } .commodity-section-label { align-items: flex-start; flex-direction: column; gap: 4px; } }

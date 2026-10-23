@@ -7,6 +7,17 @@ const INDEX_SYMBOLS = [
   { symbol: "^NSEI", name: "NIFTY 50", region: "India" },
 ];
 
+const COMMODITY_SYMBOLS = [
+  { symbol: "GC=F", name: "Gold", category: "Precious metals", unit: "USD / troy oz" },
+  { symbol: "SI=F", name: "Silver", category: "Precious metals", unit: "USD / troy oz" },
+  { symbol: "HG=F", name: "Copper", category: "Industrial metals", unit: "USD / lb" },
+  { symbol: "CL=F", name: "WTI Crude Oil", category: "Energy", unit: "USD / barrel" },
+  { symbol: "BZ=F", name: "Brent Crude Oil", category: "Energy", unit: "USD / barrel" },
+  { symbol: "NG=F", name: "Natural Gas", category: "Energy", unit: "USD / MMBtu" },
+  { symbol: "RB=F", name: "RBOB Gasoline", category: "Energy", unit: "USD / gallon" },
+  { symbol: "HO=F", name: "Heating Oil", category: "Energy", unit: "USD / gallon" },
+];
+
 const SECTOR_SYMBOLS = [
   { symbol: "XLK", name: "Technology" },
   { symbol: "XLY", name: "Consumer discretionary" },
@@ -101,7 +112,7 @@ async function quoteAsset(item) {
     ...item,
     price,
     currency: item.symbol.startsWith("^") ? null : (meta?.currency || "USD"),
-    unit: item.symbol.startsWith("^") ? "index points" : (meta?.currency || "USD"),
+    unit: item.unit || (item.symbol.startsWith("^") ? "index points" : (meta?.currency || "USD")),
     changePercent: Number.isFinite(previous) && previous !== 0 ? ((price - previous) / previous) * 100 : null,
     history: history.length ? history : undefined,
     asOf: new Date((meta?.regularMarketTime || Date.now() / 1000) * 1000).toISOString(),
@@ -179,9 +190,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    const [liveIndices, liveSectors, liveEconomies, liveCurrencies, liveCrypto] = await Promise.all([
+    const [liveIndices, liveSectors, liveCommodities, liveEconomies, liveCurrencies, liveCrypto] = await Promise.all([
       Promise.all(INDEX_SYMBOLS.map(item => quoteAsset(item).catch(() => null))).then(rows => rows.filter(Boolean)).catch(() => []),
       Promise.all(SECTOR_SYMBOLS.map(item => quoteAsset(item).catch(() => null))).then(rows => rows.filter(Boolean)).catch(() => []),
+      Promise.all(COMMODITY_SYMBOLS.map(item => quoteAsset(item).catch(() => null))).then(rows => rows.filter(Boolean)).catch(() => []),
       getEconomies().catch(() => []),
       getCurrencies().catch(() => []),
       getCrypto().catch(() => []),
@@ -189,6 +201,7 @@ export default async function handler(req, res) {
 
     const indices = liveIndices.length ? liveIndices : (cachedMarketPayload?.indices || BASELINE_SNAPSHOT.indices);
     const sectors = liveSectors.length ? liveSectors : (cachedMarketPayload?.sectors || BASELINE_SNAPSHOT.sectors);
+    const commodities = liveCommodities.length ? liveCommodities : (cachedMarketPayload?.commodities || []);
     const economies = liveEconomies.length ? liveEconomies : (cachedMarketPayload?.economies || BASELINE_SNAPSHOT.economies);
     const currencies = liveCurrencies.length ? liveCurrencies : (cachedMarketPayload?.currencies || BASELINE_SNAPSHOT.currencies);
     const crypto = liveCrypto.length ? liveCrypto : (cachedMarketPayload?.crypto || BASELINE_SNAPSHOT.crypto);
@@ -197,11 +210,12 @@ export default async function handler(req, res) {
       fetchedAt: new Date().toISOString(),
       indices,
       sectors,
+      commodities,
       economies,
       currencies,
       crypto,
       sources: [
-        { name: "Yahoo Finance", url: "https://finance.yahoo.com/markets/", note: "Public chart feed; quotes can be delayed." },
+        { name: "Yahoo Finance", url: "https://finance.yahoo.com/markets/", note: "Public chart feed for index, ETF, and commodity futures quotes; quotes can be delayed." },
         { name: "Frankfurter / European Central Bank", url: "https://www.frankfurter.app/", note: "Latest published daily reference rates." },
         { name: "Binance public spot market data", url: "https://developers.binance.com/en/docs/products/spot/rest-api/market-data-endpoints", note: "24-hour spot ticker quotes in USDT; exchange-specific pricing." },
         { name: "World Bank Open Data", url: "https://data.worldbank.org/", note: "Latest available annual observations; reporting years vary by country." },
@@ -218,7 +232,7 @@ export default async function handler(req, res) {
       fetchedAt: new Date().toISOString(),
       ...BASELINE_SNAPSHOT,
       sources: [
-        { name: "Yahoo Finance", url: "https://finance.yahoo.com/markets/", note: "Public chart feed; quotes can be delayed." },
+        { name: "Yahoo Finance", url: "https://finance.yahoo.com/markets/", note: "Public chart feed for index, ETF, and commodity futures quotes; quotes can be delayed." },
         { name: "Frankfurter / European Central Bank", url: "https://www.frankfurter.app/", note: "Latest published daily reference rates." },
         { name: "Binance public spot market data", url: "https://developers.binance.com/en/docs/products/spot/rest-api/market-data-endpoints", note: "24-hour spot ticker quotes in USDT." },
         { name: "World Bank Open Data", url: "https://data.worldbank.org/", note: "Latest available annual observations." },

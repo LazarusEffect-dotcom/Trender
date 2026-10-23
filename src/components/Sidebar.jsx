@@ -1,12 +1,13 @@
 import React from "react";
 import {
-  Activity, Globe2, ShoppingBag, Flame, Layers3, MapPinned, Database, Radar,
+  Activity, Globe2, ShoppingBag, Flame, Layers3, MapPinned, Database, Radar, Gem,
   Bot, FileBarChart, Bookmark, Settings, PanelLeftClose
 } from "lucide-react";
 
 const items = [
   ["Overview", Activity],
   ["Global Markets", Globe2],
+  ["Commodities", Gem],
   ["Consumer Trends", ShoppingBag],
   ["Viral & FOMO Trends", Flame],
   ["Industries", Layers3],

@@ -14,6 +14,7 @@ import GenzLingoModal from "./components/GenzLingoModal.jsx";
 const destinations = [
   { name: "Overview", detail: "Your market at a glance", terms: "home dashboard pulse" },
   { name: "Global Markets", detail: "Macro signals and market movement", terms: "global macro economy fx currencies commodities" },
+  { name: "Commodities", detail: "Gold, silver, copper, crude oil, and energy futures", terms: "gold silver copper oil energy natural gas gasoline heating oil futures" },
   { name: "Consumer Trends", detail: "Category growth and 55K+ respondent survey signals", terms: "consumer products demand trends survey demographic omnibus" },
   { name: "Viral & FOMO Trends", detail: "Instagram & TikTok hype, resale markups, and viral drops", terms: "viral fomo instagram tiktok aesthetic resale owala stanley labubu rhode hype drops" },
   { name: "Industries", detail: "Industry momentum and comparisons", terms: "industry sector technology retail automotive" },
