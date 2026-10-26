@@ -39,6 +39,10 @@ function apiDevServerPlugin() {
           };
 
           const pathname = parsedUrl.pathname;
+          if (pathname === "/api/geo") {
+            const mod = await import("./api/geo.js");
+            return mod.default(req, res);
+          }
           if (pathname === "/api/market") {
             const mod = await import("./api/market.js");
             return mod.default(req, res);

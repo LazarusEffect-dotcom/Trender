@@ -62,12 +62,28 @@ const BASELINE_SNAPSHOT = {
     { code: "FR", country: "France", gdpGrowth: 0.7, gdpYear: "2023", inflation: 4.9, inflationYear: "2023" },
   ],
   currencies: [
-    { currency: "EUR", rate: 0.9150, date: new Date().toISOString().slice(0, 10) },
-    { currency: "GBP", rate: 0.7650, date: new Date().toISOString().slice(0, 10) },
-    { currency: "INR", rate: 84.05, date: new Date().toISOString().slice(0, 10) },
-    { currency: "JPY", rate: 149.20, date: new Date().toISOString().slice(0, 10) },
-    { currency: "CNY", rate: 7.07, date: new Date().toISOString().slice(0, 10) },
-    { currency: "BRL", rate: 5.58, date: new Date().toISOString().slice(0, 10) },
+    { currency: "EUR", rate: 0.9220, date: new Date().toISOString().slice(0, 10) },
+    { currency: "GBP", rate: 0.7710, date: new Date().toISOString().slice(0, 10) },
+    { currency: "INR", rate: 84.10, date: new Date().toISOString().slice(0, 10) },
+    { currency: "JPY", rate: 152.40, date: new Date().toISOString().slice(0, 10) },
+    { currency: "CNY", rate: 7.12, date: new Date().toISOString().slice(0, 10) },
+    { currency: "BRL", rate: 5.68, date: new Date().toISOString().slice(0, 10) },
+    { currency: "CAD", rate: 1.3880, date: new Date().toISOString().slice(0, 10) },
+    { currency: "AUD", rate: 1.5180, date: new Date().toISOString().slice(0, 10) },
+    { currency: "CHF", rate: 0.8660, date: new Date().toISOString().slice(0, 10) },
+    { currency: "SGD", rate: 1.3210, date: new Date().toISOString().slice(0, 10) },
+    { currency: "AED", rate: 3.6725, date: new Date().toISOString().slice(0, 10) },
+    { currency: "KRW", rate: 1382.0, date: new Date().toISOString().slice(0, 10) },
+    { currency: "MXN", rate: 19.88, date: new Date().toISOString().slice(0, 10) },
+    { currency: "NZD", rate: 1.6720, date: new Date().toISOString().slice(0, 10) },
+    { currency: "SEK", rate: 10.62, date: new Date().toISOString().slice(0, 10) },
+    { currency: "HKD", rate: 7.7730, date: new Date().toISOString().slice(0, 10) },
+    { currency: "NOK", rate: 10.95, date: new Date().toISOString().slice(0, 10) },
+    { currency: "DKK", rate: 6.87, date: new Date().toISOString().slice(0, 10) },
+    { currency: "ZAR", rate: 17.68, date: new Date().toISOString().slice(0, 10) },
+    { currency: "SAR", rate: 3.75, date: new Date().toISOString().slice(0, 10) },
+    { currency: "TRY", rate: 34.25, date: new Date().toISOString().slice(0, 10) },
+    { currency: "PLN", rate: 4.02, date: new Date().toISOString().slice(0, 10) },
   ],
   crypto: [
     { symbol: "BTC", name: "Bitcoin", currency: "USDT", price: 62850.00, changePercent: 2.15, asOf: new Date().toISOString(), source: "Binance public spot market data API" },
@@ -144,15 +160,16 @@ async function getEconomies() {
 }
 
 async function getCurrencies() {
+  const currencySymbols = "EUR,GBP,INR,JPY,CNY,BRL,CAD,AUD,CHF,SGD,AED,KRW,MXN,NZD,SEK,HKD,NOK,DKK,ZAR,SAR,TRY,PLN,IDR,THB,MYR,PHP";
   try {
-    const data = await getJson("https://api.frankfurter.dev/v2/providers/ecb/rates?base=USD&quotes=EUR,GBP,INR,JPY,CNY,BRL", { timeoutMs: 6000 });
+    const data = await getJson(`https://api.frankfurter.dev/v2/providers/ecb/rates?base=USD&quotes=${currencySymbols}`, { timeoutMs: 6000 });
     if (Array.isArray(data) && data.length) {
       return data.map(row => ({ currency: row.quote, rate: row.rate, date: row.date }));
     }
   } catch {
     // fallback to classic frankfurter app endpoint
   }
-  const appData = await getJson("https://api.frankfurter.app/latest?from=USD&to=EUR,GBP,INR,JPY,CNY,BRL", { timeoutMs: 6000 });
+  const appData = await getJson(`https://api.frankfurter.app/latest?from=USD&to=${currencySymbols}`, { timeoutMs: 6000 });
   const rates = appData?.rates || {};
   return Object.entries(rates).map(([currency, rate]) => ({ currency, rate, date: appData.date || new Date().toISOString().slice(0, 10) }));
 }

@@ -45,6 +45,7 @@ import {
   PLATFORM_SHARE,
   HYPE_LIFECYCLE_STAGES,
 } from "../data/fomoTrends.js";
+import { useCurrency } from "../context/CurrencyContext.jsx";
 import "../live.css";
 
 const CATEGORIES = [
@@ -74,6 +75,7 @@ const QUICK_PRESETS = [
 ];
 
 export default function ViralTrends({ onNavigate, onAskAi, genzMode }) {
+  const { currency, currencySymbol, formatPrice, convert } = useCurrency();
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedStage, setSelectedStage] = useState("All Stages");
   const [search, setSearch] = useState("");
@@ -115,11 +117,11 @@ export default function ViralTrends({ onNavigate, onAskAi, genzMode }) {
   const markupChartData = useMemo(() => {
     return FOMO_PRODUCTS.slice(0, 8).map(p => ({
       name: p.name.split(" ")[0] + " " + (p.name.split(" ")[1] || ""),
-      Retail: p.retailPrice,
-      Resale: p.resalePrice,
+      Retail: convert(p.retailPrice),
+      Resale: convert(p.resalePrice),
       MarkupPct: p.resaleMarkup,
     }));
-  }, []);
+  }, [convert]);
 
   function toggleSaveTrend(product) {
     setSavedTrends(prev => {
@@ -134,7 +136,7 @@ export default function ViralTrends({ onNavigate, onAskAi, genzMode }) {
             id: product.id,
             name: product.name,
             symbol: `FOMO:${product.id}`,
-            price: product.resalePrice,
+            price: formatPrice(product.resalePrice),
             category: product.category,
             fomoScore: product.fomoScore,
             createdAt: new Date().toISOString(),
@@ -257,7 +259,7 @@ ${genzMode ? "Use crisp, witty GenZ analogies alongside hard quantitative reason
             <h3>Interactive Trend & Resale Visualizer</h3>
             <p>
               {chartView === "trajectory" && `6-Month Hype Velocity Curve: ${selectedProduct.name}`}
-              {chartView === "markup" && "Retail Price ($) vs Secondary Market Resale ($)"}
+              {chartView === "markup" && `Retail Price (${currencySymbol}) vs Secondary Market Resale (${currencySymbol})`}
               {chartView === "aesthetics" && "Instagram Aesthetic Movements (Millions of Reels)"}
               {chartView === "platforms" && "Where Viral Hype Originates (Platform Attribution Share)"}
             </p>
@@ -382,11 +384,11 @@ ${genzMode ? "Use crisp, witty GenZ analogies alongside hard quantitative reason
               <BarChart data={markupChartData} margin={{ top: 10, right: 15, left: -10, bottom: 0 }}>
                 <CartesianGrid stroke="#edf0f5" vertical={false} />
                 <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fill: "#8991a3", fontSize: 11 }} />
-                <YAxis tickLine={false} axisLine={false} tick={{ fill: "#8991a3", fontSize: 12 }} unit="$" />
-                <Tooltip formatter={(value, name) => [`$${value}`, name]} />
+                <YAxis tickLine={false} axisLine={false} tick={{ fill: "#8991a3", fontSize: 12 }} unit={currencySymbol} />
+                <Tooltip formatter={(value, name) => [`${currencySymbol}${Number(value).toLocaleString()}`, name]} />
                 <Legend />
-                <Bar dataKey="Retail" name="Official Retail Price ($)" fill="#94a3b8" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Resale" name="Secondary Resale Price ($)" fill="#e11d48" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Retail" name={`Official Retail Price (${currencySymbol})`} fill="#94a3b8" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Resale" name={`Secondary Resale Price (${currencySymbol})`} fill="#e11d48" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -616,12 +618,12 @@ ${genzMode ? "Use crisp, witty GenZ analogies alongside hard quantitative reason
               <div className="pricing-spread-box">
                 <div className="price-item">
                   <small>Retail Price</small>
-                  <strong>${product.retailPrice}</strong>
+                  <strong>{formatPrice(product.retailPrice)}</strong>
                 </div>
                 <div className="price-arrow">→</div>
                 <div className="price-item">
                   <small>Resale Market</small>
-                  <strong className="resale-price">${product.resalePrice}</strong>
+                  <strong className="resale-price">{formatPrice(product.resalePrice)}</strong>
                 </div>
                 <div className="resale-markup-badge">
                   +{product.resaleMarkup}% Premium

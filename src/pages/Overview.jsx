@@ -17,6 +17,7 @@ import ChartCard from "../components/ChartCard.jsx";
 import { consumerInsights, numeratorSource } from "../data/consumerInsights.js";
 import { FOMO_PRODUCTS } from "../data/fomoTrends.js";
 import { fetchPublicMarket } from "../lib/publicMarket.js";
+import { useCurrency } from "../context/CurrencyContext.jsx";
 
 function currency(value, code = "USD") {
   if (value === null || value === undefined || !Number.isFinite(Number(value))) return "—";
@@ -33,6 +34,16 @@ function move(value) {
 }
 
 export default function Overview({ onNavigate, onAskAi }) {
+  const {
+    currency: activeCurrency,
+    currencySymbol,
+    flag: userFlag,
+    countryName: userCountry,
+    currentRate,
+    formatPrice,
+    convert,
+  } = useCurrency();
+
   const [market, setMarket] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -84,7 +95,17 @@ export default function Overview({ onNavigate, onAskAi }) {
     return market?.indices?.find(item => item.symbol === selectedAsset);
   }, [selectedAsset, bitcoin, market]);
 
-  const activeChartRows = useMemo(() => (currentAssetObj?.history || []).filter(point => Number.isFinite(Number(point.value))), [currentAssetObj]);
+  const activeChartRows = useMemo(() => {
+    const raw = (currentAssetObj?.history || []).filter(point => Number.isFinite(Number(point.value)));
+    if (selectedAsset === "BTC" && activeCurrency !== "USD") {
+      return raw.map(p => ({
+        ...p,
+        value: convert(p.value),
+      }));
+    }
+    return raw;
+  }, [currentAssetObj, selectedAsset, activeCurrency, convert]);
+
   const cards = [
     {
       label: "S&P 500",
@@ -102,16 +123,20 @@ export default function Overview({ onNavigate, onAskAi }) {
     },
     {
       label: "Bitcoin",
-      value: currency(bitcoin?.price, bitcoin?.currency || "USD"),
+      value: formatPrice(bitcoin?.price, { compact: true }),
       change: move(bitcoin?.changePercent),
-      note: "Binance spot · USDT quote",
+      note: `Binance spot · Quoted in ${activeCurrency} (${currencySymbol})`,
       icon: WalletCards,
     },
     {
-      label: "USD / EUR",
-      value: euro?.rate ? Number(euro.rate).toFixed(4) : "—",
-      change: euro?.date || "ECB reference rate",
-      note: "Units per US dollar",
+      label: activeCurrency === "USD" ? "USD / EUR" : `USD / ${activeCurrency}`,
+      value: activeCurrency === "USD"
+        ? (euro?.rate ? Number(euro.rate).toFixed(4) : "—")
+        : (currentRate ? Number(currentRate).toFixed(currentRate > 100 ? 2 : 4) : "—"),
+      change: activeCurrency === "USD" ? (euro?.date || "ECB reference rate") : `${userFlag} ${userCountry}`,
+      note: activeCurrency === "USD"
+        ? "Units per US dollar"
+        : `Auto-geolocated rate (1 USD = ${Number(currentRate).toFixed(2)} ${activeCurrency})`,
       icon: TrendingUp,
     },
   ];
@@ -173,8 +198,8 @@ export default function Overview({ onNavigate, onAskAi }) {
           <div className="viral-spotlight-details">
             <h3>{topFomo.name}</h3>
             <p>
-              Trending on {topFomo.primaryPlatform} ({topFomo.views}) · Resale price
-              <strong>{topFomo.resalePrice}</strong> vs <span>{topFomo.retailPrice}</span> retail
+              Trending on {topFomo.primaryPlatform} ({topFomo.views}) · Resale price{" "}
+              <strong>{formatPrice(topFomo.resalePrice)}</strong> vs <span>{formatPrice(topFomo.retailPrice)}</span> retail
             </p>
           </div>
         </div>
@@ -256,8 +281,10 @@ export default function Overview({ onNavigate, onAskAi }) {
                 <YAxis domain={["dataMin", "dataMax"]} tickLine={false} axisLine={false} tick={{ fill: "#8991a3", fontSize: 12 }} />
                 <Tooltip
                   formatter={(val) => [
-                    selectedAsset === "BTC" ? `$${Number(val).toLocaleString()}` : `${Number(val).toLocaleString()} pts`,
-                    currentAssetObj.name
+                    selectedAsset === "BTC"
+                      ? `${currencySymbol}${Number(val).toLocaleString(undefined, { maximumFractionDigits: activeCurrency === "JPY" || activeCurrency === "KRW" ? 0 : 2 })}`
+                      : `${Number(val).toLocaleString()} pts`,
+                    currentAssetObj?.name || "Selected market"
                   ]}
                 />
                 <Area
